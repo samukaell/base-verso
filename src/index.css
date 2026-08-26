@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@theme {
+  --color-rpg-dark: #0a0a0f;
+  --color-rpg-panel: rgba(15, 23, 42, 0.75);
+  --color-rpg-border: rgba(56, 189, 248, 0.3);
+  --color-rpg-neon: #38bdf8;
+  --color-rpg-danger: #ef4444;
+  --color-rpg-success: #10b981;
+  --color-rpg-text: #e2e8f0;
+}
+
+body {
+  background-color: var(--color-rpg-dark);
+  color: var(--color-rpg-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Custom xyflow styles for dark theme */
+.react-flow__panel {
+  @apply bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-lg p-2 text-white;
+}
+
+.react-flow__controls-button {
+  @apply !bg-slate-800 !border-slate-700 !text-slate-300 hover:!bg-slate-700;
+}
+
+.react-flow__controls-button svg {
+  @apply fill-slate-300;
+}

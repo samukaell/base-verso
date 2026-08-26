@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "sector",
+      "position": { "x": 150, "y": 50 },
+      "data": {
+        "label": "Mina de Ferro (Setor Sul)",
+        "tier": 1,
+        "slotsUsed": 3,
+        "slotsMax": 4,
+        "passives": ["+4 Minério Bruto/dia"],
+        "trouble": false,
+        "siloCurrent": 5,
+        "siloMax": 20,
+        "productionRate": 4,
+        "description": "Uma mina profunda automatizada. Fornece a base metálica necessária para todas as estruturas pesadas da base."
+      }
+    },
+    {
+      "id": "2",
+      "type": "sector",
+      "position": { "x": 500, "y": 50 },
+      "data": {
+        "label": "Fazenda Solar",
+        "tier": 1,
+        "slotsUsed": 2,
+        "slotsMax": 4,
+        "passives": ["+6 Energia/dia"],
+        "trouble": false,
+        "siloCurrent": 10,
+        "siloMax": 30,
+        "productionRate": 6,
+        "description": "Captadores solares de alta eficiência instalados nos picos externos. Essenciais para manter o refino funcionando."
+      }
+    },
+    {
+      "id": "3",
+      "type": "sector",
+      "position": { "x": 325, "y": 300 },
+      "data": {
+        "label": "Fundição Central",
+        "tier": 2,
+        "slotsUsed": 2,
+        "slotsMax": 3,
+        "passives": ["-4 Minério, -2 Energia/dia", "+2 Ligas Metálicas/dia"],
+        "trouble": false,
+        "siloCurrent": 2,
+        "siloMax": 10,
+        "productionRate": 2,
+        "description": "Fábrica pesada. Aqui as matérias primas são fundidas e transformadas nas ligas de alta durabilidade para equipamentos."
+      }
+    },
+    {
+      "id": "4",
+      "type": "sector",
+      "position": { "x": 325, "y": 550 },
+      "data": {
+        "label": "Hangar de P&D",
+        "tier": 3,
+        "slotsUsed": 1,
+        "slotsMax": 2,
+        "passives": ["-2 Ligas/dia", "+1 Ponto de Invenção/dia"],
+        "trouble": false,
+        "siloCurrent": 0,
+        "siloMax": 5,
+        "productionRate": 1,
+        "description": "Centro avançado de montagem de Mechas e Exoesqueletos. Cada invenção concluída fortalece as defesas."
+      }
+    },
+    {
+      "id": "5",
+      "type": "sector",
+      "position": { "x": 650, "y": 300 },
+      "data": {
+        "label": "Purificador de Água",
+        "tier": 1,
+        "slotsUsed": 1,
+        "slotsMax": 2,
+        "passives": ["+3 Água Potável/dia"],
+        "trouble": true,
+        "siloCurrent": 0,
+        "siloMax": 15,
+        "productionRate": 3,
+        "description": "Extrai umidade do subsolo. Atualmente inativo devido a danos no encanamento principal."
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1-3", "source": "1", "target": "3", "label": "Ferrovia Pesada (12T)", "animated": true, "style": { "stroke": "#94a3b8", "strokeWidth": 2 } },
+    { "id": "e2-3", "source": "2", "target": "3", "label": "Cabos (Fluxo)", "animated": true, "style": { "stroke": "#fbbf24", "strokeWidth": 2 } },
+    { "id": "e3-4", "source": "3", "target": "4", "label": "Estrada (4T)", "animated": true, "style": { "stroke": "#94a3b8", "strokeWidth": 2 } },
+    { "id": "e2-5", "source": "2", "target": "5", "label": "Cabos Auxiliares", "animated": true, "style": { "stroke": "#fbbf24", "strokeWidth": 2 } }
+  ]
+}
