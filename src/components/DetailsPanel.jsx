@@ -7,7 +7,7 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
+export default function DetailsPanel({ node, providerNode, onClose, onToggleTrouble }) {
   const [expandedSilos, setExpandedSilos] = useState({});
   const siloRefs = useRef({});
 
@@ -91,7 +91,7 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
         )}
 
         {/* Distritos de Energia ou Energia Recebida */}
-        {(data.distritos_energia?.length > 0 || data.setor_energia_provedor_id) && (
+        {(data.distritos_energia?.length > 0 || (data.setor_energia_provedor_id && data.setor_energia_provedor_id !== data.id)) && (
           <div>
             <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
               <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
@@ -99,7 +99,7 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
             <div className="space-y-3">
               
               {/* Barra de Energia Restante (Se o Setor for Provedor) */}
-              {typeof data.restante_kwh_hora === 'number' && (
+              {data.restante_kwh_hora != null && Number(data.producao_kwh_hora) > 0 && (
                 <div className="bg-slate-800/50 p-3 rounded-lg border border-emerald-900/50 mb-4">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-sm font-bold text-slate-200">Capacidade da Matriz</span>
@@ -107,9 +107,9 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
                   </div>
                   
                   {(() => {
-                    const totalProducao = data.distritos_energia?.reduce((acc, dist) => acc + (dist.producao_kwh_hora || 0), 0) || 0;
-                    const restante = data.restante_kwh_hora;
-                    const consumido = totalProducao - restante;
+                    const totalProducao = Number(data.producao_kwh_hora) || 0;
+                    const restante = Number(data.restante_kwh_hora) || 0;
+                    const consumido = Math.max(0, totalProducao - restante);
                     const pctRestante = totalProducao > 0 ? Math.max(0, Math.min(100, (restante / totalProducao) * 100)) : 0;
                     const pctConsumido = 100 - pctRestante;
 
@@ -123,12 +123,12 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
                           <div 
                             className="h-full transition-all duration-500 bg-red-500/80"
                             style={{ width: `${pctConsumido}%` }}
-                            title={`Consumido: ${consumido} kWh`}
+                            title={`Consumido: ${consumido.toFixed(0)} kWh`}
                           />
                           <div 
                             className="h-full transition-all duration-500 bg-emerald-500"
                             style={{ width: `${pctRestante}%` }}
-                            title={`Livre: ${restante} kWh`}
+                            title={`Livre: ${restante.toFixed(0)} kWh`}
                           />
                         </div>
                         <div className="flex justify-between mt-1 text-[10px] text-slate-500 font-mono">
@@ -141,7 +141,7 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
                 </div>
               )}
 
-              {data.setor_energia_provedor_id && (
+              {data.setor_energia_provedor_id && data.setor_energia_provedor_id !== data.id && (
                 <div className="bg-slate-800/50 p-3 rounded-lg border border-sky-900/50">
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-sm font-bold text-slate-200">Rede Externa</span>
@@ -153,6 +153,16 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
                       <span className="text-emerald-400 font-mono">+{data.energia_recebida_kwh} kWh</span>
                     )}
                   </div>
+
+                  {/* Mostra saldo de energia do provedor */}
+                  {providerNode && providerNode.data.restante_kwh_hora != null && (
+                    <div className="mt-2 pt-2 border-t border-slate-700/50">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 uppercase">Capacidade Livre na Rede:</span>
+                        <span className="text-emerald-400 font-bold font-mono">{Number(providerNode.data.restante_kwh_hora).toFixed(0)} kWh</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {data.distritos_energia?.map((eng) => (

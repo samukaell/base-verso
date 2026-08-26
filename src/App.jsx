@@ -188,6 +188,7 @@ function FlowMap() {
       
       <DetailsPanel 
         node={selectedNode} 
+        providerNode={nodes.find(n => n.id === selectedNode?.data?.setor_energia_provedor_id)}
         onClose={() => setSelectedNodeId(null)} 
         onToggleTrouble={handleToggleTrouble}
       />
