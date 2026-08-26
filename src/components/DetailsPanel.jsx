@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Box, Zap, Beaker, Package, AlertTriangle } from 'lucide-react';
+import { X, Zap, Factory, Database, ShieldAlert, Activity, ArrowRight, Box } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -7,44 +7,28 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-const getTierIcon = (tier) => {
-  switch (tier) {
-    case 1: return <Zap className="w-5 h-5 text-emerald-400" />;
-    case 2: return <Beaker className="w-5 h-5 text-blue-400" />;
-    case 3: return <Package className="w-5 h-5 text-purple-400" />;
-    default: return <Box className="w-5 h-5 text-slate-400" />;
-  }
-};
-
-const getTierName = (tier) => {
-  switch (tier) {
-    case 1: return "Tier 1: Extração Bruta";
-    case 2: return "Tier 2: Refino";
-    case 3: return "Tier 3: P&D / Avançado";
-    default: return "Setor Auxiliar";
-  }
-};
-
 export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
   if (!node) return null;
   const { data } = node;
 
-  const storagePercent = data.siloMax > 0 
-    ? Math.min(100, Math.round((data.siloCurrent / data.siloMax) * 100)) 
-    : 0;
+  const hasTrouble = data.status !== 'OPERANDO';
 
   return (
-    <div className="absolute top-4 right-4 bottom-4 w-80 bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 overflow-hidden">
+    <div className="absolute top-4 right-4 bottom-4 w-[400px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 overflow-hidden">
       {/* Header */}
       <div className={cn(
         "p-4 flex items-start justify-between border-b border-slate-700/50",
-        data.trouble ? "bg-red-500/20" : "bg-sky-900/20"
+        hasTrouble ? "bg-red-500/20" : "bg-sky-900/20"
       )}>
         <div className="flex gap-3">
-          <div className="mt-1">{getTierIcon(data.tier)}</div>
+          <div className="mt-1">
+            <Activity className="w-5 h-5 text-sky-400" />
+          </div>
           <div>
-            <h2 className="font-bold text-lg text-slate-100 leading-tight">{data.label}</h2>
-            <span className="text-xs font-medium text-slate-400">{getTierName(data.tier)}</span>
+            <h2 className="font-bold text-lg text-slate-100 leading-tight">{data.nome}</h2>
+            <span className={cn("text-xs font-bold", hasTrouble ? "text-red-400" : "text-emerald-400")}>
+              Status: {data.status}
+            </span>
           </div>
         </div>
         <button 
@@ -58,96 +42,131 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
       {/* Content */}
       <div className="p-5 flex-1 overflow-y-auto space-y-6">
         
-        {/* Description */}
-        {data.description && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-2">Descrição</h3>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              {data.description}
-            </p>
-          </div>
-        )}
-
         {/* Status Alert */}
-        {data.trouble && (
+        {hasTrouble && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-bold text-red-400">Em Conflito / Paralisado</h4>
+              <h4 className="text-sm font-bold text-red-400">Setor Paralisado</h4>
               <p className="text-xs text-red-300/80 mt-1">Este setor não irá gerar produção nem processar rotas logísticas enquanto estiver neste estado.</p>
             </div>
           </div>
         )}
 
-        {/* Specs */}
-        <div>
-          <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Especificações</h3>
-          
-          <div className="space-y-3">
-            {/* Slots */}
-            <div className="flex justify-between items-center bg-slate-800/40 p-2 rounded-lg border border-slate-700/30">
-              <span className="text-sm text-slate-400">Slots Ocupados</span>
-              <div className="flex gap-1.5">
-                {Array.from({ length: data.slotsMax }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={cn(
-                      "w-4 h-4 rounded-sm border",
-                      i < data.slotsUsed ? "bg-sky-500 border-sky-400" : "bg-slate-800 border-slate-700"
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Passives */}
-            {data.passives && data.passives.length > 0 && (
-              <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/30 space-y-2">
-                <span className="text-sm text-slate-400 block mb-1">Passivas e Produção</span>
-                {data.passives.map((passive, idx) => {
-                  const isNegative = passive.startsWith('-');
-                  return (
-                    <div key={idx} className={cn(
-                      "text-xs px-2 py-1.5 rounded font-medium border",
-                      isNegative 
-                        ? "bg-amber-900/30 text-amber-400 border-amber-700/50" 
-                        : "bg-emerald-900/30 text-emerald-400 border-emerald-700/50"
-                    )}>
-                      {passive}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Silo */}
-        {data.siloMax > 0 && (
+        {/* Distritos de Energia */}
+        {data.distritos_energia && data.distritos_energia.length > 0 && (
           <div>
-            <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Inventário (Silo)</h3>
-            <div className="bg-slate-800/40 p-3 rounded-lg border border-slate-700/30">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-slate-400">Ocupação Atual</span>
-                <span className={cn("font-bold", storagePercent >= 100 ? "text-amber-400" : "text-sky-400")}>
-                  {data.siloCurrent} / {data.siloMax} Ton
-                </span>
-              </div>
-              <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50 shadow-inner">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-500",
-                    storagePercent >= 100 ? "bg-amber-400" : "bg-sky-500"
-                  )}
-                  style={{ width: `${storagePercent}%` }}
-                />
-              </div>
-              <div className="mt-2 text-right">
-                <span className="text-xs text-slate-500">{storagePercent}% cheio</span>
-              </div>
+            <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
+              <Zap className="w-4 h-4" /> Geração de Energia
+            </h3>
+            <div className="space-y-3">
+              {data.distritos_energia.map((eng) => (
+                <div key={eng.id} className="bg-slate-800/50 p-3 rounded-lg border border-emerald-900/50">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-bold text-slate-200">{eng.nome}</span>
+                    <span className="text-xs text-emerald-400 font-mono">{eng.producao_kwh_hora} kWh</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Tipo: {eng.tipo_geracao}</span>
+                    <span>Eficiência: {eng.eficiencia_percentual}%</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
+
+        {/* Fábricas e Processos */}
+        {data.fabricas && data.fabricas.length > 0 && (
+          <div>
+            <h3 className="text-xs uppercase tracking-wider text-purple-400 font-bold mb-3 flex items-center gap-2">
+              <Factory className="w-4 h-4" /> Manufatura e Refino
+            </h3>
+            <div className="space-y-3">
+              {data.fabricas.map((fab) => (
+                <div key={fab.id} className="bg-slate-800/50 p-3 rounded-lg border border-purple-900/50">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-bold text-slate-200">{fab.nome_fabrica}</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-700 rounded text-slate-300">{fab.tipo_fabrica}</span>
+                  </div>
+                  <div className="text-xs text-slate-400 mb-3">Energia Requerida: {fab.energia_requerida_kwh} kWh</div>
+                  
+                  {fab.processos_ativos && fab.processos_ativos.length > 0 ? (
+                    <div className="space-y-2">
+                      <span className="text-xs text-slate-500 uppercase">Processos Ativos</span>
+                      {fab.processos_ativos.map((proc) => (
+                        <div key={proc.id} className="bg-slate-900/50 p-2 rounded border border-slate-700/50">
+                          <div className="flex items-center gap-2 text-xs">
+                            <div className="flex-1 text-red-300 text-right truncate" title={proc.material_entrada.nome}>
+                              - {proc.material_entrada.quantidade} {proc.material_entrada.nome}
+                            </div>
+                            <ArrowRight className="w-3 h-3 text-slate-500 shrink-0" />
+                            <div className="flex-1 text-emerald-300 truncate" title={proc.material_saida.nome}>
+                              + {proc.material_saida.quantidade} {proc.material_saida.nome}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-[10px] text-center text-slate-500">Status: {proc.status_processo}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-500 italic">Sem processos ativos no momento.</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Silos de Armazenamento */}
+        {data.distritos_armazenamento && data.distritos_armazenamento.length > 0 && (
+          <div>
+            <h3 className="text-xs uppercase tracking-wider text-amber-400 font-bold mb-3 flex items-center gap-2">
+              <Database className="w-4 h-4" /> Distritos de Armazenamento
+            </h3>
+            <div className="space-y-3">
+              {data.distritos_armazenamento.map((arm) => {
+                const totalAtual = arm.itens_armazenados.reduce((acc, curr) => acc + curr.quantidade_atual_ton, 0);
+                const pct = arm.capacidade_maxima_ton > 0 ? Math.min(100, (totalAtual / arm.capacidade_maxima_ton) * 100) : 0;
+                
+                return (
+                  <div key={arm.id} className="bg-slate-800/50 p-3 rounded-lg border border-amber-900/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-sm font-bold text-slate-200">{arm.nome}</span>
+                      <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">{arm.tipo_armazenamento}</span>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-400">Ocupação</span>
+                        <span className="text-amber-400 font-mono">{totalAtual.toFixed(1)} / {arm.capacidade_maxima_ton} Ton</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50">
+                        <div 
+                          className="h-full transition-all duration-500 bg-amber-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {arm.itens_armazenados && arm.itens_armazenados.length > 0 && (
+                      <div className="space-y-1 mt-2 border-t border-slate-700/50 pt-2">
+                        {arm.itens_armazenados.map(item => (
+                          <div key={item.id} className="flex items-center gap-2 text-xs">
+                            <Box className="w-3 h-3 text-slate-500" />
+                            <span className="flex-1 text-slate-300 truncate">{item.nome_material}</span>
+                            <span className="text-slate-400 font-mono">{item.quantidade_atual_ton} T</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Footer Actions */}
@@ -156,15 +175,14 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
           onClick={() => onToggleTrouble(node.id)}
           className={cn(
             "w-full font-bold py-2.5 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2",
-            data.trouble 
+            hasTrouble 
               ? "bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-emerald-500/20" 
               : "bg-red-500 hover:bg-red-400 text-white shadow-red-500/20"
           )}
         >
-          {data.trouble ? "Resolver Conflito" : "Declarar Conflito"}
+          {hasTrouble ? "Restaurar Operações" : "Reportar Conflito"}
         </button>
       </div>
-
     </div>
   );
 }

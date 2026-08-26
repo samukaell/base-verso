@@ -14,8 +14,8 @@ import SectorNode from './components/SectorNode';
 import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 
-// Importing mock data
-import mockData from './mock/dados.json';
+// Importing mock data V2
+import mockData from './mok/dados.json';
 
 function FlowMap() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -27,10 +27,13 @@ function FlowMap() {
     setNodes((nds) =>
       nds.map((n) => {
         if (n.id === nodeId) {
-          const newTrouble = !n.data.trouble;
+          const isOperando = n.data.status === 'OPERANDO';
           return {
             ...n,
-            data: { ...n.data, trouble: newTrouble }
+            data: { 
+              ...n.data, 
+              status: isOperando ? 'CONFLITO' : 'OPERANDO' 
+            }
           };
         }
         return n;
@@ -40,15 +43,29 @@ function FlowMap() {
 
   // Initialize nodes and edges from mock data
   useEffect(() => {
-    const initializedNodes = mockData.nodes.map(node => ({
-      ...node,
+    const setores = mockData.base_rpg.setores || [];
+    const estradas = mockData.base_rpg.estradas || [];
+
+    const initializedNodes = setores.map(setor => ({
+      id: setor.id,
+      type: 'sector',
+      position: setor.posicao,
       data: {
-        ...node.data,
-        onToggleTrouble: () => handleToggleTrouble(node.id)
+        ...setor,
+        onToggleTrouble: () => handleToggleTrouble(setor.id)
       }
     }));
     setNodes(initializedNodes);
-    setEdges(mockData.edges);
+
+    const initializedEdges = estradas.map(estrada => ({
+      id: estrada.id,
+      source: estrada.origem_setor_id,
+      target: estrada.destino_setor_id,
+      label: estrada.nome,
+      animated: true,
+      style: { stroke: '#94a3b8', strokeWidth: 2 }
+    }));
+    setEdges(initializedEdges);
   }, [handleToggleTrouble, setNodes, setEdges]);
 
   const onConnect = useCallback(
@@ -58,18 +75,27 @@ function FlowMap() {
 
   const advanceDowntime = useCallback(() => {
     setDayCount((prev) => prev + 1);
+    
+    // V2: Downtime logic is purely visual for now on the app state 
+    // since the real logic would update nested items_armazenados based on processos_ativos
     setNodes((nds) =>
       nds.map((n) => {
-        if (n.data.trouble) return n; // Skip production if in trouble
-        
-        let newSilo = n.data.siloCurrent + (n.data.productionRate || 0);
-        if (newSilo > n.data.siloMax) newSilo = n.data.siloMax;
+        if (n.data.status !== 'OPERANDO') return n; // Blocked
+
+        // Simple mock of production: +5% on all items inside silos just to show it running
+        const newDistritos = (n.data.distritos_armazenamento || []).map(arm => ({
+          ...arm,
+          itens_armazenados: (arm.itens_armazenados || []).map(item => ({
+            ...item,
+            quantidade_atual_ton: item.quantidade_atual_ton + 2.5 // Add arbitrary amount for demo
+          }))
+        }));
 
         return {
           ...n,
           data: {
             ...n.data,
-            siloCurrent: newSilo
+            distritos_armazenamento: newDistritos
           }
         };
       })
@@ -90,7 +116,7 @@ function FlowMap() {
   const currentEdges = useMemo(() => {
     return edges.map(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
-      const isTrouble = sourceNode?.data?.trouble;
+      const isTrouble = sourceNode?.data?.status !== 'OPERANDO';
       
       return {
         ...edge,

@@ -1,640 +1,500 @@
 {
-  "base": {
-    "id": "base-alpha-01",
-    "nome": "Complexo Industrial Nova Esperança",
-    "ciclo_atual": 1,
-    "status_geral": "Operacional",
-    "energia_total_gerada_kwh": 38000,
-    "energia_total_consumida_kwh": 26800,
-    "setores": [
+  "base_rpg": {
+    "versao_schema": "2.0",
+    "timestamp_snapshot": "2026-08-26T14:20:18-03:00",
+    "catalogo_materiais": [
       {
-        "id": "setor-01",
-        "nome": "Setor Termossolar & Reator Núcleo",
-        "tipo": "Geracao_Energia",
-        "tier": 1,
-        "slots_totais": 4,
-        "slots_ocupados": 3,
-        "propriedade_passiva": "Rede Estabilizada: Reduz em 50% o risco de surtos elétricos",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "dados_geracao_energia": {
-          "geracao_kwh_hora": 38000,
-          "geracao_kwh_dia": 912000,
-          "reserva_bateria_mwh": 120,
-          "eficiencia_malha": "98%"
-        },
-        "fabricas": [
-          {
-            "id": "fab-01-01",
-            "nome": "Reator a Fusão Compacto",
-            "tipo": "Geração Nuclear",
-            "linha_montagem": {
-              "nome": "Linha de Indução Magnética",
-              "taxa_operacao": "100%",
-              "insumos_por_hora": [{ "recurso": "Células de Dêuterio", "quantidade": 0.5 }],
-              "producao_por_hora": [{ "recurso": "Energia", "quantidade": 25000, "unidade": "kWh" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 5, "estoque_atual_ton": 3.2 }
-          },
-          {
-            "id": "fab-01-02",
-            "nome": "Central Solar Fotovoltaica Concentrada",
-            "tipo": "Geração Solar",
-            "linha_montagem": {
-              "nome": "Matriz de Espelhos Heliostáticos",
-              "taxa_operacao": "100%",
-              "insumos_por_hora": [],
-              "producao_por_hora": [{ "recurso": "Energia", "quantidade": 8000, "unidade": "kWh" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 0, "estoque_atual_ton": 0 }
-          },
-          {
-            "id": "fab-01-03",
-            "nome": "Usina Geotérmica Profunda",
-            "tipo": "Geração Geotérmica",
-            "linha_montagem": {
-              "nome": "Turbinas de Vapor Supercrítico",
-              "taxa_operacao": "95%",
-              "insumos_por_hora": [{ "recurso": "Fluido Térmico", "quantidade": 0.1 }],
-              "producao_por_hora": [{ "recurso": "Energia", "quantidade": 5000, "unidade": "kWh" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 2, "estoque_atual_ton": 1.1 }
-          }
-        ]
+        "id": "MAT_MINERIO_FERRO",
+        "nome_material": "Minério de Ferro",
+        "categoria": "MINERIO_BRUTO",
+        "nivel_tier": 1,
+        "descricao": "Rocha bruta rica em óxido de ferro extraída de poços profundos."
       },
       {
-        "id": "setor-02",
-        "nome": "Setor de Mineração Pesada",
-        "tipo": "Extracao_Tier_1",
-        "tier": 1,
-        "slots_totais": 4,
-        "slots_ocupados": 4,
-        "propriedade_passiva": "+2 Extração de Minério Bruto em todos os poços",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-02-01",
-            "nome": "Mina de Ferro Profunda",
-            "tipo": "Extração Mineral",
-            "linha_montagem": {
-              "nome": "Escavação Automatizada Contínua",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Energia", "quantidade": 2400, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Minério de Ferro Bruto", "quantidade": 8, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 20, "estoque_atual_ton": 14 }
-          },
-          {
-            "id": "fab-02-02",
-            "nome": "Poço de Extração de Silício",
-            "tipo": "Extração Mineral",
-            "linha_montagem": {
-              "nome": "Draga de Areia Quartzífera",
-              "taxa_operacao": "90%",
-              "insumos_por_dia": [{ "recurso": "Energia", "quantidade": 1800, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Silício Bruto", "quantidade": 6, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 20, "estoque_atual_ton": 8 }
-          },
-          {
-            "id": "fab-02-03",
-            "nome": "Pedreira de Titânio & Terras Raras",
-            "tipo": "Extração Mineral",
-            "linha_montagem": {
-              "nome": "Triturador Hidráulico de Rocha",
-              "taxa_operacao": "85%",
-              "insumos_por_dia": [{ "recurso": "Energia", "quantidade": 3000, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Minério de Titânio", "quantidade": 4, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 20, "estoque_atual_ton": 6 }
-          },
-          {
-            "id": "fab-02-04",
-            "nome": "Unidade de Separação Magnética",
-            "tipo": "Pré-Processamento",
-            "linha_montagem": {
-              "nome": "Esteiras de Triagem Magnética",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Minérios Mistos", "quantidade": 4, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Concentrado Metálico", "quantidade": 3.5, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 15, "estoque_atual_ton": 4 }
-          }
-        ]
+        "id": "MAT_SILICIO_BRUTO",
+        "nome_material": "Silício Bruto",
+        "categoria": "MINERIO_BRUTO",
+        "nivel_tier": 1,
+        "descricao": "Areia quartzífera rica em cristais condutores."
       },
       {
-        "id": "setor-03",
-        "nome": "Setor Petroquímico & Sintéticos",
-        "tipo": "Extracao_Tier_1",
-        "tier": 1,
-        "slots_totais": 4,
-        "slots_ocupados": 3,
-        "propriedade_passiva": "Dutos Isolados: Reduz em 20% o custo de bombeamento",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-03-01",
-            "nome": "Torre de Fracionamento",
-            "tipo": "Refino Petroquímico",
-            "linha_montagem": {
-              "nome": "Destilação Térmica Contínua",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Petróleo Bruto", "quantidade": 8, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Polímeros Sintéticos", "quantidade": 4, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 20, "estoque_atual_ton": 11 }
-          },
-          {
-            "id": "fab-03-02",
-            "nome": "Sintetizador de Eletrólitos",
-            "tipo": "Química de Baterias",
-            "linha_montagem": {
-              "nome": "Reator de Ácidos e Sais",
-              "taxa_operacao": "80%",
-              "insumos_por_dia": [{ "recurso": "Polímeros", "quantidade": 2, "unidade": "Ton" }, { "recurso": "Energia", "quantidade": 1500, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Eletrólito de Alta Densidade", "quantidade": 2, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 15, "estoque_atual_ton": 5 }
-          },
-          {
-            "id": "fab-03-03",
-            "nome": "Usina de Resinas Blindadas",
-            "tipo": "Materiais Compostos",
-            "linha_montagem": {
-              "nome": "Polimerização de Alta Pressão",
-              "taxa_operacao": "90%",
-              "insumos_por_dia": [{ "recurso": "Polímeros", "quantidade": 3, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Resina Estrutural", "quantidade": 2.5, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 15, "estoque_atual_ton": 3 }
-          }
-        ]
+        "id": "MAT_TITANIO_BRUTO",
+        "nome_material": "Minério de Titânio",
+        "categoria": "MINERIO_BRUTO",
+        "nivel_tier": 1,
+        "descricao": "Composto mineral de alta resistência estrutural."
       },
       {
-        "id": "setor-04",
-        "nome": "Setor de Metalurgia & Ligas",
-        "tipo": "Refino_Tier_2",
-        "tier": 2,
-        "slots_totais": 4,
-        "slots_ocupados": 4,
-        "propriedade_passiva": "+10% de rendimento na conversão de ligas metálicas",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-04-01",
-            "nome": "Fundição de Aço Reforçado",
-            "tipo": "Siderurgia",
-            "linha_montagem": {
-              "nome": "Forno de Arco Elétrico",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Minério de Ferro Bruto", "quantidade": 8, "unidade": "Ton" }, { "recurso": "Energia", "quantidade": 3200, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Ligas Metálicas", "quantidade": 4, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 6 }
-          },
-          {
-            "id": "fab-04-02",
-            "nome": "Forja de Titânio Balístico",
-            "tipo": "Metalurgia Avançada",
-            "linha_montagem": {
-              "nome": "Prensa Isostática a Quente",
-              "taxa_operacao": "75%",
-              "insumos_por_dia": [{ "recurso": "Minério de Titânio", "quantidade": 4, "unidade": "Ton" }, { "recurso": "Energia", "quantidade": 4000, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Placas de Titânio Grau Militar", "quantidade": 2, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 2.5 }
-          },
-          {
-            "id": "fab-04-03",
-            "nome": "Linha de Extrusão Estrutural",
-            "tipo": "Conformação Mecânica",
-            "linha_montagem": {
-              "nome": "Extrusora de Perfis e Vigas",
-              "taxa_operacao": "90%",
-              "insumos_por_dia": [{ "recurso": "Ligas Metálicas", "quantidade": 3, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Vigas Estruturais", "quantidade": 2.8, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 5 }
-          },
-          {
-            "id": "fab-04-04",
-            "nome": "Laminação de Chapas",
-            "tipo": "Acabamento de Superfície",
-            "linha_montagem": {
-              "nome": "Laminador Contínuo a Frio",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Ligas Metálicas", "quantidade": 2, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Chapas de Blindagem Fina", "quantidade": 1.9, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 3.2 }
-          }
-        ]
+        "id": "MAT_PETROLEO_BRUTO",
+        "nome_material": "Petróleo Bruto",
+        "categoria": "MINERIO_BRUTO",
+        "nivel_tier": 1,
+        "descricao": "Insumo fóssil denso para síntese orgânica e polímeros."
       },
       {
-        "id": "setor-05",
-        "nome": "Setor Eletrônico & Microprocessadores",
-        "tipo": "Refino_Tier_2",
-        "tier": 2,
-        "slots_totais": 4,
-        "slots_ocupados": 3,
-        "propriedade_passiva": "Sala Limpa Classe 100: Taxa de falha de componentes reduzida a zero",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-05-01",
-            "nome": "Fab de Wafers de Silício",
-            "tipo": "Semicondutores",
-            "linha_montagem": {
-              "nome": "Litografia Ultravioleta Extrema (EUV)",
-              "taxa_operacao": "95%",
-              "insumos_por_dia": [{ "recurso": "Silício Bruto", "quantidade": 4, "unidade": "Ton" }, { "recurso": "Energia", "quantidade": 5000, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Wafers de Processamento", "quantidade": 1.5, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 4 }
-          },
-          {
-            "id": "fab-05-02",
-            "nome": "Montadora de Placas Lógicas",
-            "tipo": "Circuitos Integrados",
-            "linha_montagem": {
-              "nome": "Insersora Robótica de Alta Precisão (SMD)",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Wafers", "quantidade": 1, "unidade": "Ton" }, { "recurso": "Polímeros", "quantidade": 1, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Circuitos e Sensores Integrados", "quantidade": 1.8, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 3.5 }
-          },
-          {
-            "id": "fab-05-03",
-            "nome": "Unidade de Baterias de Estado Sólido",
-            "tipo": "Armazenamento Eletroquímico",
-            "linha_montagem": {
-              "nome": "Encapsulamento a Vácuo",
-              "taxa_operacao": "85%",
-              "insumos_por_dia": [{ "recurso": "Eletrólito de Alta Densidade", "quantidade": 2, "unidade": "Ton" }, { "recurso": "Ligas Metálicas", "quantidade": 1, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Células de Bateria Avançadas", "quantidade": 2.5, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 4.8 }
-          }
-        ]
+        "id": "MAT_FERRO_REFINADO",
+        "nome_material": "Liga de Ferro Puro",
+        "categoria": "REFINADO",
+        "nivel_tier": 2,
+        "descricao": "Lingote refinado de ferro para chapas e vigas industriais."
       },
       {
-        "id": "setor-06",
-        "nome": "Setor de Manufatura de Defesa",
-        "tipo": "Manufatura_Militar_Tier_2",
-        "tier": 2,
-        "slots_totais": 4,
-        "slots_ocupados": 3,
-        "propriedade_passiva": "Linhas Blindadas: Imune a sabotagens menores de rebeldes",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-06-01",
-            "nome": "Arsenal de Munições Cinéticas",
-            "tipo": "Balística",
-            "linha_montagem": {
-              "nome": "Torneamento e Carga de Cartuchos Automática",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Ligas Metálicas", "quantidade": 3, "unidade": "Ton" }, { "recurso": "Polímeros", "quantidade": 1, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Caixas de Munição Pesada", "quantidade": 3.8, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 12, "estoque_atual_ton": 8.2 }
-          },
-          {
-            "id": "fab-06-02",
-            "nome": "Fábrica de Servomotores & Hidráulica",
-            "tipo": "Mecânica de Precisão",
-            "linha_montagem": {
-              "nome": "Calibração e Teste de Torque Robótico",
-              "taxa_operacao": "90%",
-              "insumos_por_dia": [{ "recurso": "Ligas Metálicas", "quantidade": 2, "unidade": "Ton" }, { "recurso": "Circuitos", "quantidade": 1, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Atuadores e Servomotores", "quantidade": 2.5, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 3.9 }
-          },
-          {
-            "id": "fab-06-03",
-            "nome": "Estamparia de Chassi Militar",
-            "tipo": "Armações Pesadas",
-            "linha_montagem": {
-              "nome": "Robôs de Solda a Laser 6-Eixos",
-              "taxa_operacao": "80%",
-              "insumos_por_dia": [{ "recurso": "Titânio Balístico", "quantidade": 2, "unidade": "Ton" }, { "recurso": "Vigas Estruturais", "quantidade": 2, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Chassis para Exoesqueleto", "quantidade": 3, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 10, "estoque_atual_ton": 2.1 }
-          }
-        ]
+        "id": "MAT_TITANIO_BALISTICO",
+        "nome_material": "Placas de Titânio Balístico",
+        "categoria": "REFINADO",
+        "nivel_tier": 2,
+        "descricao": "Metal ultra-reforçado usado em armaduras militares."
       },
       {
-        "id": "setor-07",
-        "nome": "Setor de P&D / Hangar Experimental",
-        "tipo": "Invenções_Tier_3",
-        "tier": 3,
-        "slots_totais": 4,
-        "slots_ocupados": 3,
-        "propriedade_passiva": "Prototipagem 3D&T: Converte recursos excedentes em PEs de melhoria de base",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "fabricas": [
-          {
-            "id": "fab-07-01",
-            "nome": "Hangar de Montagem de Mechas",
-            "tipo": "Veículos Gigantes (Sugoi)",
-            "linha_montagem": {
-              "nome": "Doca Espacial de Integração Mecânica",
-              "taxa_operacao": "100%",
-              "insumos_por_projeto": [
-                { "recurso": "Ligas Metálicas", "quantidade": 50, "unidade": "Ton" },
-                { "recurso": "Circuitos Integrados", "quantidade": 30, "unidade": "Ton" },
-                { "recurso": "Células de Bateria", "quantidade": 20, "unidade": "Ton" }
-              ],
-              "producao_final": "1 Mecha de Combate Escala Sugoi (Ficha Aliado Gigante)"
-            },
-            "armazem_proprio": { "capacidade_max_ton": 80, "estoque_atual_ton": 42.5 }
-          },
-          {
-            "id": "fab-07-02",
-            "nome": "Laboratório de Exoesqueletos",
-            "tipo": "Equipamentos Portáteis",
-            "linha_montagem": {
-              "nome": "Bancada de Biomecatrônica",
-              "taxa_operacao": "100%",
-              "insumos_por_unidade": [
-                { "recurso": "Ligas Metálicas", "quantidade": 10, "unidade": "Ton" },
-                { "recurso": "Circuitos Integrados", "quantidade": 5, "unidade": "Ton" },
-                { "recurso": "Atuadores", "quantidade": 2, "unidade": "Ton" }
-              ],
-              "producao_final": "Exoesqueleto de Combate (+1 Força / +1 Armadura)"
-            },
-            "armazem_proprio": { "capacidade_max_ton": 25, "estoque_atual_ton": 8 }
-          },
-          {
-            "id": "fab-07-03",
-            "nome": "Bancada de Canhões de Plasma",
-            "tipo": "Armamento Experimental",
-            "linha_montagem": {
-              "nome": "Alinhador de Bobinas Magnéticas",
-              "taxa_operacao": "60%",
-              "insumos_por_unidade": [
-                { "recurso": "Titânio Balístico", "quantidade": 8, "unidade": "Ton" },
-                { "recurso": "Células de Bateria", "quantidade": 10, "unidade": "Ton" }
-              ],
-              "producao_final": "Canhão Pesado de Plasma (Dano Escala Sugoi - Consome 2 Baterias/Tiro)"
-            },
-            "armazem_proprio": { "capacidade_max_ton": 20, "estoque_atual_ton": 5.4 }
-          }
-        ]
+        "id": "MAT_POLIMERO_SINTETICO",
+        "nome_material": "Polímeros Sintéticos",
+        "categoria": "REFINADO",
+        "nivel_tier": 2,
+        "descricao": "Resinas e plásticos industriais para isolamento e circuitos."
       },
       {
-        "id": "setor-08",
-        "nome": "Setor Galpão Logístico & Centro de Distribuição Central",
-        "tipo": "Armazenamento_Logistica",
-        "tier": 2,
-        "slots_totais": 4,
-        "slots_ocupados": 4,
-        "propriedade_passiva": "Logística Automatizada: +15 Ton/dia em capacidade de transbordo total",
-        "status_conflito": {
-          "ativo": false,
-          "motivo": null
-        },
-        "capacidade_setor_galpao": {
-          "armazenamento_total_ton": 500,
-          "armazenamento_ocupado_ton": 218.4,
-          "taxa_ocupacao": "43.68%",
-          "silos_especializados": [
-            { "tipo": "Silo de Minérios Brutos", "capacidade_ton": 150, "ocupado_ton": 68 },
-            { "tipo": "Armazém de Ligas e Metais Refinados", "capacidade_ton": 150, "ocupado_ton": 72.4 },
-            { "tipo": "Câmara Climatizada de Componentes e Circuitos", "capacidade_ton": 100, "ocupado_ton": 45 },
-            { "tipo": "Bunker de Munição e Baterias", "capacidade_ton": 100, "ocupado_ton": 33 }
-          ]
-        },
-        "fabricas": [
-          {
-            "id": "fab-08-01",
-            "nome": "Terminal de Cargas Ferroviário",
-            "tipo": "Logística Pesada",
-            "linha_montagem": {
-              "nome": "Guindastes Pórtico Autônomos",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Energia", "quantidade": 1200, "unidade": "kWh" }],
-              "producao_por_dia": [{ "recurso": "Carga Despachada", "quantidade": 48, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 100, "estoque_atual_ton": 40 }
-          },
-          {
-            "id": "fab-08-02",
-            "nome": "Centro de Paletização e Empacotamento",
-            "tipo": "Padronização de Carga",
-            "linha_montagem": {
-              "nome": "Enfardadeiras e Encaixotamento Robótico",
-              "taxa_operacao": "100%",
-              "insumos_por_dia": [{ "recurso": "Polímeros", "quantidade": 1, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Paletes Padrão Militar", "quantidade": 20, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 50, "estoque_atual_ton": 18.4 }
-          },
-          {
-            "id": "fab-08-03",
-            "nome": "Estação de Drones de Frete Rápido",
-            "tipo": "Logística Aérea Express",
-            "linha_montagem": {
-              "nome": "Plataforma de Lançamento e Troca Rápida de Bateria",
-              "taxa_operacao": "90%",
-              "insumos_por_dia": [{ "recurso": "Baterias", "quantidade": 0.5, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Entregas Críticas Realizadas", "quantidade": 6, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 30, "estoque_atual_ton": 12 }
-          },
-          {
-            "id": "fab-08-04",
-            "nome": "Terminal de Triagem de Sobras & Reciclagem",
-            "tipo": "Logística Reversa",
-            "linha_montagem": {
-              "nome": "Separador Óptico de Sucata",
-              "taxa_operacao": "80%",
-              "insumos_por_dia": [{ "recurso": "Sucata Industrial", "quantidade": 5, "unidade": "Ton" }],
-              "producao_por_dia": [{ "recurso": "Ligas Recuperadas", "quantidade": 3.2, "unidade": "Ton" }]
-            },
-            "armazem_proprio": { "capacidade_max_ton": 40, "estoque_atual_ton": 15 }
-          }
-        ]
+        "id": "MAT_WAFER_PROCESSADOR",
+        "nome_material": "Wafers de Silício",
+        "categoria": "COMPONENTE",
+        "nivel_tier": 2,
+        "descricao": "Discos microprocessados litografados em alta precisão."
+      },
+      {
+        "id": "MAT_CIRCUITO_LOGICO",
+        "nome_material": "Circuitos Lógicos Integrados",
+        "categoria": "COMPONENTE",
+        "nivel_tier": 2,
+        "descricao": "Placas controladoras montadas por robótica SMD."
+      },
+      {
+        "id": "MAT_BATERIA_SOLIDA",
+        "nome_material": "Células de Bateria Avançada",
+        "categoria": "COMPONENTE",
+        "nivel_tier": 2,
+        "descricao": "Unidades de acúmulo energético de estado sólido."
+      },
+      {
+        "id": "MAT_CHASSI_MILITAR",
+        "nome_material": "Chassis para Exoesqueleto",
+        "categoria": "COMPONENTE",
+        "nivel_tier": 2,
+        "descricao": "Estrutura mecatrônica com servomotores soldados."
+      },
+      {
+        "id": "MAT_EXOESQUELETO",
+        "nome_material": "Exoesqueleto de Combate",
+        "categoria": "TECNOLOGIA_3DET",
+        "nivel_tier": 3,
+        "descricao": "Traje blindado motorizado (+1 Força / +1 Armadura)."
+      },
+      {
+        "id": "MAT_MECHA_COMBATE",
+        "nome_material": "Mecha de Combate Sugoi",
+        "categoria": "TECNOLOGIA_3DET",
+        "nivel_tier": 3,
+        "descricao": "Unidade bípede gigante de artilharia pesada (Ficha Aliado)."
       }
     ],
-    "rotas_transporte": [
+    "setores": [
       {
-        "id": "rota-e01-base",
-        "origem_id": "setor-01",
-        "destino_id": "todos_setores",
-        "nome": "Malha de Dutos Elétricos Subterrâneos",
-        "tipo": "Duto de Energia",
-        "capacidade_max_ton_dia": 0,
-        "capacidade_kwh_dia": 1000000,
-        "fluxo_continuo": true,
-        "status": "Operacional",
-        "perda_linha": "2%"
+        "id": "SET_CENTRO",
+        "nome": "Setor Central (Hub)",
+        "status": "OPERANDO",
+        "nivel_defesa": 80,
+        "posicao": { "x": 500.0, "y": 300.0 },
+        "distritos_energia": [],
+        "distritos_armazenamento": [],
+        "fabricas": []
       },
       {
-        "id": "rota-02-04-a",
-        "origem_id": "fab-02-01",
-        "destino_id": "fab-04-01",
-        "nome": "Linha Férrea de Minério de Ferro",
-        "tipo": "Ferrovia Pesada",
-        "capacidade_max_ton_dia": 12,
-        "carga_atual_ton_dia": 8,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "SET_01",
+        "nome": "Setor 1 - Mineração e Refino Inicial",
+        "status": "OPERANDO",
+        "nivel_defesa": 60,
+        "posicao": { "x": 100.0, "y": 80.0 },
+        "distritos_energia": [
+          {
+            "id": "ENG_01_GEO",
+            "nome": "Gerador Geotérmico Local Subterrâneo",
+            "tipo_geracao": "GEOTERMICA",
+            "status": "OPERANDO",
+            "producao_kwh_hora": 5000.0,
+            "eficiencia_percentual": 90.0
+          }
+        ],
+        "distritos_armazenamento": [
+          {
+            "id": "ARM_01_SILO",
+            "nome": "Silo de Minérios do Setor 1",
+            "tipo_armazenamento": "MINERIOS",
+            "status": "OPERANDO",
+            "capacidade_maxima_ton": 80.0,
+            "itens_armazenados": [
+              {
+                "id": "ESTQ_06",
+                "material_id": "MAT_MINERIO_FERRO",
+                "nome_material": "Minério de Ferro",
+                "quantidade_atual_ton": 45.0
+              }
+            ]
+          }
+        ],
+        "fabricas": [
+          {
+            "id": "FAB_A12",
+            "nome_fabrica": "Fundição Primária A12",
+            "tipo_fabrica": "BASE",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.0,
+            "energia_requerida_kwh": 3200.0,
+            "processos_ativos": [
+              {
+                "id": "PROC_20260826_01",
+                "material_entrada": {
+                  "id": "MAT_MINERIO_FERRO",
+                  "nome": "Minério de Ferro",
+                  "quantidade": 8.0
+                },
+                "material_saida": {
+                  "id": "MAT_FERRO_REFINADO",
+                  "nome": "Liga de Ferro Puro",
+                  "quantidade": 4.0
+                },
+                "data_hora_entrada": "2026-08-26T14:00:00",
+                "data_hora_saida": "2026-08-26T16:00:00",
+                "velocidade_processo": 1.0,
+                "status_processo": "EM_ANDAMENTO"
+              }
+            ]
+          },
+          {
+            "id": "FAB_A13",
+            "nome_fabrica": "Forja de Titânio A13",
+            "tipo_fabrica": "BASE",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.2,
+            "energia_requerida_kwh": 4000.0,
+            "processos_ativos": [
+              {
+                "id": "PROC_20260826_02",
+                "material_entrada": {
+                  "id": "MAT_TITANIO_BRUTO",
+                  "nome": "Minério de Titânio",
+                  "quantidade": 4.0
+                },
+                "material_saida": {
+                  "id": "MAT_TITANIO_BALISTICO",
+                  "nome": "Placas de Titânio Balístico",
+                  "quantidade": 2.0
+                },
+                "data_hora_entrada": "2026-08-26T13:30:00",
+                "data_hora_saida": "2026-08-26T15:30:00",
+                "velocidade_processo": 1.2,
+                "status_processo": "EM_ANDAMENTO"
+              }
+            ]
+          }
+        ]
       },
       {
-        "id": "rota-02-04-b",
-        "origem_id": "fab-02-03",
-        "destino_id": "fab-04-02",
-        "nome": "Estrada Reforçada de Titânio",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 4,
-        "carga_atual_ton_dia": 4,
-        "gargalo_detectado": true,
-        "status": "No Limite Máximo"
+        "id": "SET_02",
+        "nome": "Setor 2 - Extração Bruta Sul",
+        "status": "OPERANDO",
+        "nivel_defesa": 50,
+        "posicao": { "x": 100.0, "y": 520.0 },
+        "distritos_energia": [],
+        "distritos_armazenamento": [
+          {
+            "id": "ARM_02_SILO",
+            "nome": "Silo Local de Extração Sul",
+            "tipo_armazenamento": "MINERIOS",
+            "status": "OPERANDO",
+            "capacidade_maxima_ton": 60.0,
+            "itens_armazenados": [
+              {
+                "id": "ESTQ_07",
+                "material_id": "MAT_TITANIO_BRUTO",
+                "nome_material": "Minério de Titânio",
+                "quantidade_atual_ton": 28.0
+              }
+            ]
+          }
+        ],
+        "fabricas": [
+          {
+            "id": "FAB_B01",
+            "nome_fabrica": "Poço de Sílica e Quartzo B01",
+            "tipo_fabrica": "BASE",
+            "status": "OPERANDO",
+            "velocidade_processamento": 0.8,
+            "energia_requerida_kwh": 1800.0,
+            "processos_ativos": []
+          }
+        ]
       },
       {
-        "id": "rota-02-05",
-        "origem_id": "fab-02-02",
-        "destino_id": "fab-05-01",
-        "nome": "Comboio Rodoviário de Silício",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 6,
-        "carga_atual_ton_dia": 4,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "SET_03",
+        "nome": "Setor 3 - Eletrônica & Componentes",
+        "status": "OPERANDO",
+        "nivel_defesa": 70,
+        "posicao": { "x": 900.0, "y": 60.0 },
+        "distritos_energia": [],
+        "distritos_armazenamento": [],
+        "fabricas": [
+          {
+            "id": "FAB_C01",
+            "nome_fabrica": "Laboratório Litográfico SMD C01",
+            "tipo_fabrica": "TECNOLOGIA",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.5,
+            "energia_requerida_kwh": 5000.0,
+            "processos_ativos": [
+              {
+                "id": "PROC_20260826_03",
+                "material_entrada": {
+                  "id": "MAT_SILICIO_BRUTO",
+                  "nome": "Silício Bruto",
+                  "quantidade": 4.0
+                },
+                "material_saida": {
+                  "id": "MAT_CIRCUITO_LOGICO",
+                  "nome": "Circuitos Lógicos Integrados",
+                  "quantidade": 2.0
+                },
+                "data_hora_entrada": "2026-08-26T12:00:00",
+                "data_hora_saida": "2026-08-26T14:30:00",
+                "velocidade_processo": 1.5,
+                "status_processo": "CONCLUIDO"
+              }
+            ]
+          },
+          {
+            "id": "FAB_C02",
+            "nome_fabrica": "Usina de Baterias Químicas C02",
+            "tipo_fabrica": "TECNOLOGIA",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.0,
+            "energia_requerida_kwh": 2500.0,
+            "processos_ativos": []
+          }
+        ]
       },
       {
-        "id": "rota-03-05",
-        "origem_id": "fab-03-02",
-        "destino_id": "fab-05-03",
-        "nome": "Duto Químico de Eletrólitos",
-        "tipo": "Duto Industrial",
-        "capacidade_max_ton_dia": 10,
-        "carga_atual_ton_dia": 2,
-        "fluxo_continuo": true,
-        "status": "Operacional"
+        "id": "SET_04",
+        "nome": "Setor 4 - Manufatura Mecânica",
+        "status": "OPERANDO",
+        "nivel_defesa": 65,
+        "posicao": { "x": 900.0, "y": 520.0 },
+        "distritos_energia": [],
+        "distritos_armazenamento": [],
+        "fabricas": [
+          {
+            "id": "FAB_D01",
+            "nome_fabrica": "Estamparia de Chassis Militares D01",
+            "tipo_fabrica": "TECNOLOGIA",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.0,
+            "energia_requerida_kwh": 3500.0,
+            "processos_ativos": [
+              {
+                "id": "PROC_20260826_04",
+                "material_entrada": {
+                  "id": "MAT_TITANIO_BALISTICO",
+                  "nome": "Placas de Titânio Balístico",
+                  "quantidade": 3.0
+                },
+                "material_saida": {
+                  "id": "MAT_CHASSI_MILITAR",
+                  "nome": "Chassis para Exoesqueleto",
+                  "quantidade": 1.5
+                },
+                "data_hora_entrada": "2026-08-26T14:15:00",
+                "data_hora_saida": "2026-08-26T18:15:00",
+                "velocidade_processo": 1.0,
+                "status_processo": "EM_ANDAMENTO"
+              }
+            ]
+          },
+          {
+            "id": "FAB_D02",
+            "nome_fabrica": "Hangar de Montagem Sugoi D02",
+            "tipo_fabrica": "TECNOLOGIA",
+            "status": "OPERANDO",
+            "velocidade_processamento": 1.0,
+            "energia_requerida_kwh": 8000.0,
+            "processos_ativos": [
+              {
+                "id": "PROC_20260826_05",
+                "material_entrada": {
+                  "id": "MAT_CHASSI_MILITAR",
+                  "nome": "Chassis para Exoesqueleto",
+                  "quantidade": 2.0
+                },
+                "material_saida": {
+                  "id": "MAT_EXOESQUELETO",
+                  "nome": "Exoesqueleto de Combate",
+                  "quantidade": 1.0
+                },
+                "data_hora_entrada": "2026-08-26T14:00:00",
+                "data_hora_saida": "2026-08-26T22:00:00",
+                "velocidade_processo": 1.0,
+                "status_processo": "EM_ANDAMENTO"
+              }
+            ]
+          }
+        ]
       },
       {
-        "id": "rota-03-08",
-        "origem_id": "fab-03-01",
-        "destino_id": "setor-08",
-        "nome": "Estrada de Polímeros para Galpão",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 4,
-        "carga_atual_ton_dia": 4,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "SET_05",
+        "nome": "Setor 5 - Complexo de Armazenamento Central",
+        "status": "OPERANDO",
+        "nivel_defesa": 90,
+        "posicao": { "x": 500.0, "y": 720.0 },
+        "distritos_energia": [],
+        "distritos_armazenamento": [
+          {
+            "id": "ARM_05_GERAL",
+            "nome": "Megagalpão Central de Logística",
+            "tipo_armazenamento": "GERAL",
+            "status": "OPERANDO",
+            "capacidade_maxima_ton": 300.0,
+            "itens_armazenados": [
+              {
+                "id": "ESTQ_01",
+                "material_id": "MAT_FERRO_REFINADO",
+                "nome_material": "Liga de Ferro Puro",
+                "quantidade_atual_ton": 85.5
+              },
+              {
+                "id": "ESTQ_02",
+                "material_id": "MAT_TITANIO_BALISTICO",
+                "nome_material": "Placas de Titânio Balístico",
+                "quantidade_atual_ton": 34.0
+              },
+              {
+                "id": "ESTQ_03",
+                "material_id": "MAT_CIRCUITO_LOGICO",
+                "nome_material": "Circuitos Lógicos Integrados",
+                "quantidade_atual_ton": 18.2
+              }
+            ]
+          },
+          {
+            "id": "ARM_05_BUNKER",
+            "nome": "Bunker Subterrâneo de Munições e Baterias",
+            "tipo_armazenamento": "TECNOLOGIA",
+            "status": "OPERANDO",
+            "capacidade_maxima_ton": 100.0,
+            "itens_armazenados": [
+              {
+                "id": "ESTQ_04",
+                "material_id": "MAT_BATERIA_SOLIDA",
+                "nome_material": "Células de Bateria Avançada",
+                "quantidade_atual_ton": 22.0
+              },
+              {
+                "id": "ESTQ_05",
+                "material_id": "MAT_EXOESQUELETO",
+                "nome_material": "Exoesqueleto de Combate",
+                "quantidade_atual_ton": 5.0
+              }
+            ]
+          }
+        ],
+        "fabricas": []
       },
       {
-        "id": "rota-04-06",
-        "origem_id": "fab-04-01",
-        "destino_id": "fab-06-01",
-        "nome": "Esteira Industrial de Aço para Arsenal",
-        "tipo": "Esteira Automatizada",
-        "capacidade_max_ton_dia": 8,
-        "carga_atual_ton_dia": 3,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "SET_06",
+        "nome": "Setor 6 - Matriz Energética Principal",
+        "status": "OPERANDO",
+        "nivel_defesa": 95,
+        "posicao": { "x": 380.0, "y": 60.0 },
+        "distritos_energia": [
+          {
+            "id": "ENG_06_FUSAO",
+            "nome": "Reator a Fusão Núcleo Alfa",
+            "tipo_geracao": "FUSAO",
+            "status": "OPERANDO",
+            "producao_kwh_hora": 25000.0,
+            "eficiencia_percentual": 98.0
+          },
+          {
+            "id": "ENG_06_SOLAR",
+            "nome": "Matriz Fotovoltaica Heliostática",
+            "tipo_geracao": "SOLAR",
+            "status": "OPERANDO",
+            "producao_kwh_hora": 8000.0,
+            "eficiencia_percentual": 95.0
+          }
+        ],
+        "distritos_armazenamento": [],
+        "fabricas": []
+      }
+    ],
+    "estradas": [
+      {
+        "id": "EST_01",
+        "origem_setor_id": "SET_01",
+        "destino_setor_id": "SET_06",
+        "nome": "Estrada 1 (Setor 1 -> Energia)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 10.0
       },
       {
-        "id": "rota-04-07",
-        "origem_id": "fab-04-02",
-        "destino_id": "fab-07-01",
-        "nome": "Monotrilho Pesado Titânio-Hangar",
-        "tipo": "Ferrovia Pesada",
-        "capacidade_max_ton_dia": 12,
-        "carga_atual_ton_dia": 6,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_02",
+        "origem_setor_id": "SET_01",
+        "destino_setor_id": "SET_CENTRO",
+        "nome": "Estrada 2 (Setor 1 -> Centro)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 15.0
       },
       {
-        "id": "rota-05-07",
-        "origem_id": "fab-05-02",
-        "destino_id": "fab-07-01",
-        "nome": "Linha Blindada de Circuitos para Mechas",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 4,
-        "carga_atual_ton_dia": 3,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_03",
+        "origem_setor_id": "SET_06",
+        "destino_setor_id": "SET_CENTRO",
+        "nome": "Estrada 3 (Duto Tronco Energia -> Centro)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 50.0
       },
       {
-        "id": "rota-06-07",
-        "origem_id": "fab-06-03",
-        "destino_id": "fab-07-02",
-        "nome": "Transportador de Chassi para Exoesqueleto",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 4,
-        "carga_atual_ton_dia": 2,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_04",
+        "origem_setor_id": "SET_02",
+        "destino_setor_id": "SET_CENTRO",
+        "nome": "Estrada 4 (Setor 2 -> Centro)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 12.0
       },
       {
-        "id": "rota-04-08",
-        "origem_id": "setor-04",
-        "destino_id": "setor-08",
-        "nome": "Ferrovia Tronco de Ligas para Galpão Geral",
-        "tipo": "Ferrovia Pesada",
-        "capacidade_max_ton_dia": 24,
-        "carga_atual_ton_dia": 14,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_05",
+        "origem_setor_id": "SET_CENTRO",
+        "destino_setor_id": "SET_04",
+        "nome": "Estrada 5 (Centro -> Setor 4)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 20.0
       },
       {
-        "id": "rota-05-08",
-        "origem_id": "setor-05",
-        "destino_id": "setor-08",
-        "nome": "Linha Expressa de Eletrônicos para Galpão",
-        "tipo": "Rota de Drones / Carretas Rápidas",
-        "capacidade_max_ton_dia": 8,
-        "carga_atual_ton_dia": 4.5,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_06",
+        "origem_setor_id": "SET_CENTRO",
+        "destino_setor_id": "SET_03",
+        "nome": "Estrada 6 (Centro -> Setor 3)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 18.0
       },
       {
-        "id": "rota-06-08",
-        "origem_id": "setor-06",
-        "destino_id": "setor-08",
-        "nome": "Comboio Militar de Reserva para Galpão",
-        "tipo": "Estrada Básica",
-        "capacidade_max_ton_dia": 8,
-        "carga_atual_ton_dia": 6,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_07",
+        "origem_setor_id": "SET_CENTRO",
+        "destino_setor_id": "SET_05",
+        "nome": "Estrada 7 (Tronco Centro -> Armazenamento)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 40.0
       },
       {
-        "id": "rota-08-07",
-        "origem_id": "setor-08",
-        "destino_id": "setor-07",
-        "nome": "Alimentador Principal de Insumos para P&D",
-        "tipo": "Ferrovia Pesada Dupla",
-        "capacidade_max_ton_dia": 30,
-        "carga_atual_ton_dia": 18,
-        "gargalo_detectado": false,
-        "status": "Operacional"
+        "id": "EST_08",
+        "origem_setor_id": "SET_04",
+        "destino_setor_id": "SET_05",
+        "nome": "Estrada 8 (Setor 4 -> Armazenamento)",
+        "status": "OPERANDO",
+        "capacidade_fluxo_ton_dia": 25.0
       }
     ]
   }
