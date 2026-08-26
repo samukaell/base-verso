@@ -65,6 +65,18 @@ export default function SectorNode({ data, selected }) {
           <span className="font-bold text-sky-400 ml-auto">{nivel_defesa}</span>
         </div>
 
+        {/* Player Info (apenas Hub) */}
+        {data.playerInfo && (
+          <div className="bg-sky-900/40 p-2 rounded-lg border border-sky-700/50">
+            <div className="text-[10px] text-sky-300 font-bold uppercase tracking-wider mb-1">Comando Central</div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-slate-300">Comandante: <span className="text-white font-bold">{data.playerInfo.nome}</span></span>
+              <span className="text-[10px] text-slate-300">ID Jogador: <span className="text-sky-300 font-mono">{data.playerInfo.id}</span></span>
+              <span className="text-[10px] text-slate-300">ID Base: <span className="text-sky-300 font-mono">{data.playerInfo.baseId}</span></span>
+            </div>
+          </div>
+        )}
+
         {/* Counters */}
         <div className="grid grid-cols-3 gap-2">
           

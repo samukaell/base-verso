@@ -98,7 +98,7 @@
     "setores": [
       {
         "id": "SET_CENTRO",
-        "nome": "Setor Central (Hub)",
+        "nome": "Setor Central (Samuel)",
         "status": "OPERANDO",
         "nivel_defesa": 80,
         "posicao": { "x": 500.0, "y": 300.0 },

@@ -41,6 +41,27 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
 
       {/* Content */}
       <div className="p-5 flex-1 overflow-y-auto space-y-6">
+
+        {/* Player / Base Info */}
+        {data.playerInfo && (
+          <div className="bg-sky-900/30 border border-sky-500/30 rounded-lg p-3 flex flex-col gap-1">
+            <h3 className="text-xs uppercase tracking-wider text-sky-400 font-bold mb-1 flex items-center gap-2">
+              <Activity className="w-4 h-4" /> Centro de Comando
+            </h3>
+            <p className="text-xs text-slate-300 flex justify-between">
+              <span>Comandante:</span> 
+              <span className="text-white font-bold">{data.playerInfo.nome}</span>
+            </p>
+            <p className="text-xs text-slate-300 flex justify-between">
+              <span>ID Jogador:</span> 
+              <span className="font-mono text-sky-300">{data.playerInfo.id}</span>
+            </p>
+            <p className="text-xs text-slate-300 flex justify-between">
+              <span>ID Base:</span> 
+              <span className="font-mono text-sky-300">{data.playerInfo.baseId}</span>
+            </p>
+          </div>
+        )}
         
         {/* Status Alert */}
         {hasTrouble && (
@@ -53,14 +74,72 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
           </div>
         )}
 
-        {/* Distritos de Energia */}
-        {data.distritos_energia && data.distritos_energia.length > 0 && (
+        {/* Distritos de Energia ou Energia Recebida */}
+        {(data.distritos_energia?.length > 0 || data.setor_energia_provedor_id) && (
           <div>
             <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4" /> Geração de Energia
+              <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
             </h3>
             <div className="space-y-3">
-              {data.distritos_energia.map((eng) => (
+              
+              {/* Barra de Energia Restante (Se o Setor for Provedor) */}
+              {typeof data.restante_kwh_hora === 'number' && (
+                <div className="bg-slate-800/50 p-3 rounded-lg border border-emerald-900/50 mb-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-bold text-slate-200">Capacidade da Matriz</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-700 rounded text-emerald-400 font-bold">Provedor</span>
+                  </div>
+                  
+                  {(() => {
+                    const totalProducao = data.distritos_energia?.reduce((acc, dist) => acc + (dist.producao_kwh_hora || 0), 0) || 0;
+                    const restante = data.restante_kwh_hora;
+                    const consumido = totalProducao - restante;
+                    const pctRestante = totalProducao > 0 ? Math.max(0, Math.min(100, (restante / totalProducao) * 100)) : 0;
+                    const pctConsumido = 100 - pctRestante;
+
+                    return (
+                      <div className="mb-1">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-slate-400">Consumo da Rede</span>
+                          <span className="text-emerald-400 font-mono">{restante.toFixed(0)} kWh Livres</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50 flex">
+                          <div 
+                            className="h-full transition-all duration-500 bg-red-500/80"
+                            style={{ width: `${pctConsumido}%` }}
+                            title={`Consumido: ${consumido} kWh`}
+                          />
+                          <div 
+                            className="h-full transition-all duration-500 bg-emerald-500"
+                            style={{ width: `${pctRestante}%` }}
+                            title={`Livre: ${restante} kWh`}
+                          />
+                        </div>
+                        <div className="flex justify-between mt-1 text-[10px] text-slate-500 font-mono">
+                          <span>0</span>
+                          <span>Máx: {totalProducao.toFixed(0)} kWh</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {data.setor_energia_provedor_id && (
+                <div className="bg-slate-800/50 p-3 rounded-lg border border-sky-900/50">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-bold text-slate-200">Rede Externa</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-700 rounded text-slate-300">Recebendo</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Provedor: <span className="font-mono text-sky-300">{data.setor_energia_provedor_id}</span></span>
+                    {data.energia_recebida_kwh && (
+                      <span className="text-emerald-400 font-mono">+{data.energia_recebida_kwh} kWh</span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {data.distritos_energia?.map((eng) => (
                 <div key={eng.id} className="bg-slate-800/50 p-3 rounded-lg border border-emerald-900/50">
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-sm font-bold text-slate-200">{eng.nome}</span>
