@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Zap, Factory, Database, ShieldAlert, Activity, ArrowRight, Box } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -8,10 +8,26 @@ function cn(...inputs) {
 }
 
 export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
+  const [expandedSilos, setExpandedSilos] = useState({});
+  const siloRefs = useRef({});
+
+  const toggleSilo = (siloId) => {
+    const willExpand = !expandedSilos[siloId];
+    setExpandedSilos(prev => ({ ...prev, [siloId]: willExpand }));
+
+    if (willExpand) {
+      setTimeout(() => {
+        if (siloRefs.current[siloId]) {
+          siloRefs.current[siloId].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    }
+  };
+
   if (!node) return null;
   const { data } = node;
 
-  const hasTrouble = data.status !== 'OPERANDO';
+  const hasTrouble = data.status !== 'OPERANDO' && data.status !== 'Sem energia';
 
   return (
     <div className="absolute top-4 right-4 bottom-4 w-[400px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 overflow-hidden">
@@ -205,35 +221,65 @@ export default function DetailsPanel({ node, onClose, onToggleTrouble }) {
             </h3>
             <div className="space-y-3">
               {data.distritos_armazenamento.map((arm) => {
-                const totalAtual = arm.itens_armazenados.reduce((acc, curr) => acc + curr.quantidade_atual_ton, 0);
-                const pct = arm.capacidade_maxima_ton > 0 ? Math.min(100, (totalAtual / arm.capacidade_maxima_ton) * 100) : 0;
+                const max = arm.capacidade_maxima_ton || 0;
+                // Usa o novo campo se existir, senão faz fallback pro cálculo manual
+                const restante = typeof arm.espaco_restante_ton === 'number' 
+                  ? arm.espaco_restante_ton 
+                  : max - (arm.itens_armazenados?.reduce((acc, curr) => acc + (curr.quantidade_atual_ton || 0), 0) || 0);
+                const consumido = Math.max(0, max - restante);
+                const pctConsumido = max > 0 ? Math.min(100, Math.max(0, (consumido / max) * 100)) : 0;
+                const pctRestante = 100 - pctConsumido;
+                const isExpanded = expandedSilos[arm.id];
                 
                 return (
-                  <div key={arm.id} className="bg-slate-800/50 p-3 rounded-lg border border-amber-900/50">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-bold text-slate-200">{arm.nome}</span>
-                      <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">{arm.tipo_armazenamento}</span>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-400">Ocupação</span>
-                        <span className="text-amber-400 font-mono">{totalAtual.toFixed(1)} / {arm.capacidade_maxima_ton} Ton</span>
+                  <div 
+                    key={arm.id} 
+                    ref={el => siloRefs.current[arm.id] = el}
+                    className="bg-slate-800/50 rounded-lg border border-amber-900/50 overflow-hidden transition-colors"
+                  >
+                    <div 
+                      className="p-3 cursor-pointer hover:bg-slate-700/60"
+                      onClick={() => toggleSilo(arm.id)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-bold text-slate-200">{arm.nome}</span>
+                        <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">{arm.tipo_armazenamento}</span>
                       </div>
-                      <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50">
-                        <div 
-                          className="h-full transition-all duration-500 bg-amber-500"
-                          style={{ width: `${pct}%` }}
-                        />
+                      
+                      <div className="mb-1">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-slate-400">Ocupação</span>
+                          <span className="text-amber-400 font-mono">{restante.toFixed(1)} Ton Livres</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50 flex">
+                          <div 
+                            className="h-full transition-all duration-500 bg-amber-500"
+                            style={{ width: `${pctConsumido}%` }}
+                            title={`Ocupado: ${consumido.toFixed(1)} Ton`}
+                          />
+                          <div 
+                            className="h-full transition-all duration-500 bg-emerald-500/80"
+                            style={{ width: `${pctRestante}%` }}
+                            title={`Livre: ${restante.toFixed(1)} Ton`}
+                          />
+                        </div>
+                        <div className="flex justify-between mt-1 text-[10px] text-slate-500 font-mono">
+                          <span>0</span>
+                          <span>Máx: {max.toFixed(0)} Ton</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 text-[10px] text-center text-slate-500 italic">
+                        {isExpanded ? '▲ Ocultar materiais' : '▼ Clique para listar materiais'}
                       </div>
                     </div>
 
-                    {arm.itens_armazenados && arm.itens_armazenados.length > 0 && (
-                      <div className="space-y-1 mt-2 border-t border-slate-700/50 pt-2">
+                    {isExpanded && arm.itens_armazenados && arm.itens_armazenados.length > 0 && (
+                      <div className="bg-slate-900/80 p-3 space-y-2 border-t border-slate-700/50">
                         {arm.itens_armazenados.map(item => (
-                          <div key={item.id} className="flex items-center gap-2 text-xs">
+                          <div key={item.id} className="flex items-center gap-2 text-xs bg-slate-800/50 p-2 rounded">
                             <Box className="w-3 h-3 text-slate-500" />
-                            <span className="flex-1 text-slate-300 truncate">{item.nome_material}</span>
+                            <span className="flex-1 text-slate-300 truncate" title={item.nome_material}>{item.nome_material}</span>
                             <span className="text-slate-400 font-mono">{item.quantidade_atual_ton} T</span>
                           </div>
                         ))}
