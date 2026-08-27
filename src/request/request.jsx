@@ -216,3 +216,48 @@ export async function criarEstrada({
     return { success: false, message: err.message };
   }
 }
+
+export async function transferirEstoque({
+  armazemOrigemId,
+  armazemDestinoId,
+  materialId,
+  quantidadeTon,
+}) {
+  try {
+    const { data, error } = await supabase.rpc('transferir_estoque_armazens', {
+      p_armazem_origem_id: armazemOrigemId,
+      p_armazem_destino_id: armazemDestinoId,
+      p_material_id: materialId,
+      p_quantidade_ton: quantidadeTon,
+    });
+
+    if (error) {
+      console.error('Erro na RPC transferir_estoque_armazens:', error.message);
+      return { success: false, message: error.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro inesperado:', err);
+    return { success: false, message: err.message };
+  }
+}
+
+export async function reativarProcesso(processoId, forcarLoop = true) {
+  try {
+    const { data, error } = await supabase.rpc('reativar_processo_producao', {
+      p_processo_id: processoId,
+      p_forcar_loop: forcarLoop,
+    });
+
+    if (error) {
+      console.error('Erro ao reativar processo:', error.message);
+      return { success: false, message: error.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro inesperado:', err);
+    return { success: false, message: err.message };
+  }
+}

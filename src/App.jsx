@@ -139,6 +139,38 @@ function FlowMap() {
     setSelectedNodeId(null);
   }, []);
 
+  const onEdgesDelete = useCallback(
+    async (edgesToDelete) => {
+      const { deletarEstrada } = await import('./services/deleteService');
+      
+      for (const edge of edgesToDelete) {
+        const res = await deletarEstrada(edge.id);
+        if (res && res.success) {
+          console.log('Estrada desconectada:', edge.id);
+        } else {
+          console.error('Falha ao desconectar estrada', edge.id);
+        }
+      }
+    },
+    []
+  );
+
+  const onNodesDelete = useCallback(
+    async (nodesToDelete) => {
+      const { deletarSetor } = await import('./services/deleteService');
+      
+      for (const n of nodesToDelete) {
+        const res = await deletarSetor(n.id);
+        if (res && res.success) {
+          console.log('Setor e estruturas internas deletados com sucesso:', n.id);
+        } else {
+          console.error('Falha ao deletar setor', n.id);
+        }
+      }
+    },
+    []
+  );
+
   const nodeTypes = useMemo(() => ({ sector: SectorNode }), []);
 
   const currentEdges = useMemo(() => {
@@ -178,6 +210,8 @@ function FlowMap() {
         providerNode={nodes.find(n => n.id === selectedNode?.data?.setor_energia_provedor_id)}
         onClose={() => setSelectedNodeId(null)} 
         onToggleTrouble={handleToggleTrouble}
+        nodes={nodes}
+        edges={edges}
       />
 
       <ReactFlow
@@ -186,6 +220,8 @@ function FlowMap() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgesDelete={onEdgesDelete}
+        onNodesDelete={onNodesDelete}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}

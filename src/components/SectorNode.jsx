@@ -103,8 +103,8 @@ export default function SectorNode({ data, selected }) {
 
       {/* Output Handle */}
       <Handle type="source" position={Position.Bottom} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
-      <Handle type="source" position={Position.Right} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
-      <Handle type="source" position={Position.Left} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
+      <Handle id="right" type="source" position={Position.Right} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
+      <Handle id="left" type="source" position={Position.Left} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
     </div>
   );
 }
