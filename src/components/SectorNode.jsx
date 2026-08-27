@@ -28,7 +28,7 @@ export default function SectorNode({ data, selected }) {
       hasTrouble && "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]"
     )}>
       {/* Input Handle */}
-      <Handle type="target" position={Position.Top} className="w-3 h-3 bg-sky-400 border-2 border-slate-900" />
+      <Handle type="target" position={Position.Top} className="!w-4 !h-4 !bg-emerald-400 border-2 !border-slate-900 cursor-crosshair shadow-[0_0_10px_rgba(52,211,153,0.8)] z-50" />
       
       {/* Header */}
       <div className={cn(
@@ -102,7 +102,9 @@ export default function SectorNode({ data, selected }) {
       </div>
 
       {/* Output Handle */}
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-sky-400 border-2 border-slate-900" />
+      <Handle type="source" position={Position.Bottom} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
+      <Handle type="source" position={Position.Right} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
+      <Handle type="source" position={Position.Left} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
     </div>
   );
 }

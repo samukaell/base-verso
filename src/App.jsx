@@ -13,6 +13,7 @@ import '@xyflow/react/dist/style.css';
 import SectorNode from './components/SectorNode';
 import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
+import CreateRoadModal from './components/CreateRoadModal';
 import { fetchPlayerData, updateSetorStatus } from './request/request';
 
 function FlowMap() {
@@ -21,19 +22,22 @@ function FlowMap() {
   const [dayCount, setDayCount] = useState(1);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [baseId, setBaseId] = useState(null);
+  const [pendingConnection, setPendingConnection] = useState(null);
 
   const handleToggleTrouble = useCallback((nodeId) => {
     setNodes((nds) => {
       const targetNode = nds.find((n) => n.id === nodeId);
       if (!targetNode) return nds;
 
-      const newStatus = targetNode.data.status === 'OPERANDO' ? 'CONFLITO' : 'OPERANDO';
-      const dependentStatus = newStatus === 'CONFLITO' ? 'SEM_ENERGIA' : 'OPERANDO';
+      const newStatus = targetNode.data.status === 'OPERANDO' ? 'INTERDITADO' : 'OPERANDO';
+      const dependentStatus = newStatus === 'INTERDITADO' ? 'SEM_ENERGIA' : 'OPERANDO';
 
       // Atualiza o banco de forma assíncrona
       updateSetorStatus(nodeId, newStatus);
       nds.forEach(n => {
-        if (n.data.setor_energia_provedor_id === nodeId) {
+        // Cascata apenas para OUTROS setores que dependem da energia deste
+        if (n.data.setor_energia_provedor_id === nodeId && n.id !== nodeId) {
           updateSetorStatus(n.id, dependentStatus);
         }
       });
@@ -47,7 +51,7 @@ function FlowMap() {
           };
         }
         
-        // Efeito cascata para os dependentes de energia
+        // Efeito cascata para os dependentes de energia (excluindo ele mesmo)
         if (n.data.setor_energia_provedor_id === nodeId) {
           return {
             ...n,
@@ -60,89 +64,72 @@ function FlowMap() {
     });
   }, [setNodes]);
 
-  // Initialize nodes and edges from Supabase RPC
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchPlayerData('A26-I99'); // using new ID
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchPlayerData('A26-I99'); // using new ID
+      
+      const responseObj = Array.isArray(data) ? data[0] : data;
+
+      if (responseObj && responseObj.bases && responseObj.bases.length > 0) {
+        const primeiraBase = responseObj.bases[0];
+        setBaseId(primeiraBase.id); // store baseId
+
+        const setores = primeiraBase.setores || [];
+        const estradas = primeiraBase.estradas || [];
         
-        // Supabase RPCs might return an array with one object, or the object directly.
-        const responseObj = Array.isArray(data) ? data[0] : data;
+        const playerInfo = {
+          id: responseObj.id,
+          nome: responseObj.nome,
+          baseId: primeiraBase.id
+        };
 
-        if (responseObj && responseObj.bases && responseObj.bases.length > 0) {
-          const primeiraBase = responseObj.bases[0];
-          const setores = primeiraBase.setores || [];
-          const estradas = primeiraBase.estradas || [];
-          
-          const playerInfo = {
-            id: responseObj.id,
-            nome: responseObj.nome,
-            baseId: primeiraBase.id
-          };
+        const initializedNodes = setores.map(setor => ({
+          id: setor.id,
+          type: 'sector',
+          position: setor.posicao || { x: Math.random() * 500, y: Math.random() * 500 }, // fallback
+          data: {
+            ...setor,
+            playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
+            onToggleTrouble: () => handleToggleTrouble(setor.id)
+          }
+        }));
+        setNodes(initializedNodes);
 
-          const initializedNodes = setores.map(setor => ({
-            id: setor.id,
-            type: 'sector',
-            position: setor.posicao || { x: Math.random() * 500, y: Math.random() * 500 }, // fallback se não vier do back
-            data: {
-              ...setor,
-              playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
-              onToggleTrouble: () => handleToggleTrouble(setor.id)
-            }
-          }));
-          setNodes(initializedNodes);
-
-          const initializedEdges = estradas.map(estrada => ({
-            id: estrada.id,
-            source: estrada.origem_setor_id,
-            target: estrada.destino_setor_id,
-            label: estrada.nome,
-            animated: true,
-            style: { stroke: '#94a3b8', strokeWidth: 2 }
-          }));
-          setEdges(initializedEdges);
-        }
-      } catch (error) {
-        console.error("Failed to load map data", error);
-      } finally {
-        setIsLoading(false);
+        const initializedEdges = estradas.map(estrada => ({
+          id: estrada.id,
+          source: estrada.origem_setor_id,
+          target: estrada.destino_setor_id,
+          label: estrada.nome,
+          animated: true,
+          style: { stroke: '#94a3b8', strokeWidth: 2 }
+        }));
+        setEdges(initializedEdges);
       }
-    };
-
-    loadData();
+    } catch (error) {
+      console.error("Failed to load map data", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [handleToggleTrouble, setNodes, setEdges]);
 
+  // Initialize nodes and edges from Supabase RPC
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#94a3b8', strokeWidth: 2 } }, eds)),
-    [setEdges]
+    (params) => {
+      // Abre o modal de criar estrada ao invés de apenas conectar localmente
+      setPendingConnection(params);
+    },
+    []
   );
 
-  const advanceDowntime = useCallback(() => {
-    setDayCount((prev) => prev + 1);
-    
-    setNodes((nds) =>
-      nds.map((n) => {
-        if (n.data.status !== 'OPERANDO') return n;
-
-        const newDistritos = (n.data.distritos_armazenamento || []).map(arm => ({
-          ...arm,
-          itens_armazenados: (arm.itens_armazenados || []).map(item => ({
-            ...item,
-            quantidade_atual_ton: item.quantidade_atual_ton + 2.5
-          }))
-        }));
-
-        return {
-          ...n,
-          data: {
-            ...n.data,
-            distritos_armazenamento: newDistritos
-          }
-        };
-      })
-    );
-  }, [setNodes]);
+  const onTimeSkipComplete = useCallback(async (dias) => {
+    setDayCount((prev) => prev + dias);
+    await loadData();
+  }, [loadData]);
 
   const onNodeClick = useCallback((event, node) => {
     setSelectedNodeId(node.id);
@@ -184,7 +171,7 @@ function FlowMap() {
 
   return (
     <div className="w-screen h-screen relative">
-      <HUD onAdvanceDowntime={advanceDowntime} dayCount={dayCount} />
+      <HUD dayCount={dayCount} baseId={baseId} onTimeSkipComplete={onTimeSkipComplete} />
       
       <DetailsPanel 
         node={selectedNode} 
@@ -208,6 +195,14 @@ function FlowMap() {
         <Background color="#1e293b" gap={24} size={2} />
         <Controls className="!bg-slate-800 !border-slate-700 !fill-slate-300" />
       </ReactFlow>
+
+      {pendingConnection && (
+        <CreateRoadModal 
+          connection={pendingConnection}
+          nodes={nodes}
+          onClose={() => setPendingConnection(null)}
+        />
+      )}
     </div>
   );
 }

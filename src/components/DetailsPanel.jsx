@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { X, Zap, Factory, Database, ShieldAlert, Activity, ArrowRight, Box } from 'lucide-react';
+import { X, Zap, Factory, Database, ShieldAlert, Activity, ArrowRight, Box, Settings, Plus } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import FactoryControlModal from './FactoryControlModal';
+import AddInstallationModal from './AddInstallationModal';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -9,6 +11,8 @@ function cn(...inputs) {
 
 export default function DetailsPanel({ node, providerNode, onClose, onToggleTrouble }) {
   const [expandedSilos, setExpandedSilos] = useState({});
+  const [controllingFactory, setControllingFactory] = useState(null);
+  const [showAddInstallation, setShowAddInstallation] = useState(false);
   const siloRefs = useRef({});
 
   const toggleSilo = (siloId) => {
@@ -47,12 +51,21 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
             </span>
           </div>
         </div>
-        <button 
-          onClick={onClose}
-          className="text-slate-500 hover:text-slate-300 transition-colors p-1"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => setShowAddInstallation(true)}
+            className="text-amber-500 hover:text-amber-300 transition-colors p-1"
+            title="Adicionar Instalação (Fábrica, Armazém, Energia)"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={onClose}
+            className="text-slate-500 hover:text-slate-300 transition-colors p-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -217,6 +230,13 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
                   ) : (
                     <div className="text-xs text-slate-500 italic">Sem processos ativos no momento.</div>
                   )}
+
+                  <button
+                    onClick={() => setControllingFactory(fab)}
+                    className="w-full mt-3 bg-slate-700/50 hover:bg-slate-600 border border-slate-600/50 text-purple-300 hover:text-purple-200 text-xs py-1.5 rounded transition-colors flex justify-center items-center gap-1 font-bold"
+                  >
+                    <Factory className="w-3 h-3" /> Painel da Fábrica
+                  </button>
                 </div>
               ))}
             </div>
@@ -315,9 +335,25 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
               : "bg-red-500 hover:bg-red-400 text-white shadow-red-500/20"
           )}
         >
-          {hasTrouble ? "Restaurar Operações" : "Reportar Conflito"}
+          {hasTrouble ? "Restaurar Operações" : "Interditar Setor"}
         </button>
       </div>
+      {controllingFactory && (
+        <FactoryControlModal 
+          fabrica={controllingFactory} 
+          onClose={() => setControllingFactory(null)}
+          onUpdate={() => {
+            setControllingFactory(null);
+          }}
+        />
+      )}
+
+      {showAddInstallation && (
+        <AddInstallationModal 
+          setorId={node.id} 
+          onClose={() => setShowAddInstallation(false)} 
+        />
+      )}
     </div>
   );
 }
