@@ -32,7 +32,7 @@ export default function SectorNode({ data, selected }) {
           <div className="w-10 h-10 rounded-full bg-[#5a6652] text-white flex items-center justify-center mb-2">
             <span className="text-2xl font-bold">+</span>
           </div>
-          <span className="text-white/80 font-bold uppercase text-sm">Lote Vazio</span>
+          <span className="text-white/80 font-bold uppercase text-sm">Novo Setor</span>
         </div>
       </div>
     );

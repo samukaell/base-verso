@@ -45,23 +45,6 @@ export default function HUD({ dayCount = 1, baseId, onTimeSkipComplete }) {
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
         </button>
 
-        {/* Botão para Criar Novo Setor */}
-        <button 
-          onClick={() => setShowCreateSector(true)}
-          className="pointer-events-auto flex items-center justify-between w-72 bg-slate-900/80 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-lg hover:bg-slate-800/90 hover:border-sky-500/50 transition-all group"
-          title="Construir Novo Setor"
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-sky-500/10 p-2 rounded-lg border border-sky-500/20 group-hover:bg-sky-500/20 group-hover:border-sky-500/40 transition-colors">
-              <Plus className="w-6 h-6 text-sky-400" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="font-bold text-slate-100 leading-tight">Novo Setor</span>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider">Expandir Base</span>
-            </div>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-sky-500/50"></div>
-        </button>
       </div>
 
       {showInventory && (

@@ -96,6 +96,7 @@ function FlowMap() {
         };
         
         const layoutMap = [
+          // Original core (12)
           { x: 0, y: 0, width: 250, height: 200 },     
           { x: 0, y: 220, width: 250, height: 150 },   
           { x: 0, y: 390, width: 250, height: 150 },   
@@ -105,15 +106,78 @@ function FlowMap() {
           { x: 710, y: 150, width: 350, height: 390 }, 
           { x: 1080, y: 150, width: 100, height: 390 },
           { x: 1200, y: 150, width: 100, height: 250 },
-          { x: 0, y: 560, width: 420, height: 150 }, // empty spot
-          { x: 440, y: 560, width: 620, height: 150 }, // empty spot
-          { x: 1080, y: 560, width: 220, height: 150 } // empty spot
+          { x: 0, y: 560, width: 420, height: 150 }, 
+          { x: 440, y: 560, width: 620, height: 150 }, 
+          { x: 1080, y: 560, width: 220, height: 150 },
+          
+          // Expanded right
+          { x: 1200, y: 420, width: 100, height: 290 },
+          { x: 1320, y: 150, width: 200, height: 250 },
+          { x: 1320, y: 420, width: 200, height: 290 },
+          { x: 860, y: 0, width: 440, height: 130 },
+          { x: 1320, y: 0, width: 200, height: 130 },
+          
+          // Expanded left
+          { x: -270, y: 0, width: 250, height: 200 },
+          { x: -270, y: 220, width: 250, height: 150 },
+          { x: -270, y: 390, width: 250, height: 320 },
+          { x: -540, y: 0, width: 250, height: 370 },
+          { x: -540, y: 390, width: 250, height: 320 },
+          
+          // Expanded top
+          { x: 0, y: -220, width: 420, height: 200 },
+          { x: 440, y: -220, width: 400, height: 200 },
+          { x: 860, y: -220, width: 440, height: 200 },
+          { x: 1320, y: -220, width: 200, height: 200 },
+          { x: -270, y: -220, width: 250, height: 200 },
+          { x: -540, y: -220, width: 250, height: 200 },
+
+          // Expanded bottom
+          { x: 0, y: 730, width: 420, height: 200 },
+          { x: 440, y: 730, width: 620, height: 200 },
+          { x: 1080, y: 730, width: 440, height: 200 },
+          { x: -270, y: 730, width: 250, height: 200 },
+          { x: -540, y: 730, width: 250, height: 200 }
         ];
 
-        const initializedNodes = layoutMap.map((layout, index) => {
-          const setor = setores[index];
-          if (setor) {
-            return {
+        // Dynamically append a massive grid around the edges to ensure infinite expansion
+        const gap = 20;
+        const eWidth = 250;
+        const eHeight = 150;
+        
+        // Add 500 extra slots around the core area
+        for(let r = -5; r <= 8; r++) {
+            for(let c = -5; c <= 8; c++) {
+               // roughly avoid the core area coordinates (0 to 1320, 0 to 730)
+               const bx = c * (eWidth + gap);
+               const by = r * (eHeight + gap);
+               
+               // If it's outside the handcrafted bounding box, add it to layout map
+               if (bx < -600 || bx > 1500 || by < -300 || by > 900) {
+                   layoutMap.push({ x: bx, y: by, width: eWidth, height: eHeight });
+               }
+            }
+        }
+
+        const initializedNodes = [];
+        const usedLayoutIndices = new Set();
+        const occupiedLayouts = [];
+
+        // 1. Process all existing sectors
+        setores.forEach((setor) => {
+          let layoutIndex = layoutMap.findIndex(l => 
+             setor.posicao && l.x === Math.round(setor.posicao.x) && l.y === Math.round(setor.posicao.y)
+          );
+          
+          if (layoutIndex === -1) {
+            layoutIndex = layoutMap.findIndex((_, i) => !usedLayoutIndices.has(i));
+          }
+          
+          if (layoutIndex !== -1) {
+            usedLayoutIndices.add(layoutIndex);
+            const layout = layoutMap[layoutIndex];
+            occupiedLayouts.push(layout);
+            initializedNodes.push({
               id: setor.id,
               type: 'sector',
               position: { x: layout.x, y: layout.y },
@@ -125,23 +189,66 @@ function FlowMap() {
                 onToggleTrouble: () => handleToggleTrouble(setor.id),
                 isEmpty: false
               }
-            };
-          } else {
-            return {
-              id: `empty_${index}`,
-              type: 'sector',
-              position: { x: layout.x, y: layout.y },
-              data: {
-                width: layout.width,
-                height: layout.height,
-                isEmpty: true,
-                layoutX: layout.x,
-                layoutY: layout.y,
-                onCreateClick: () => setPendingNewSector({ x: layout.x, y: layout.y })
-              }
-            };
+            });
           }
         });
+
+        // 2. Generate adjacent empty lots
+        // A layout is adjacent if its bounds are within 50px of any occupied layout
+        const isAdjacent = (l1, l2) => {
+           const gapTolerance = 50;
+           const overlapX = l1.x <= (l2.x + l2.width + gapTolerance) && (l1.x + l1.width + gapTolerance) >= l2.x;
+           const overlapY = l1.y <= (l2.y + l2.height + gapTolerance) && (l1.y + l1.height + gapTolerance) >= l2.y;
+           return overlapX && overlapY;
+        };
+
+        let emptySpotsAdded = 0;
+        layoutMap.forEach((layout, index) => {
+          if (!usedLayoutIndices.has(index)) {
+            const isNearOccupied = (occupiedLayouts.length === 0 && index === 0) || 
+                                   occupiedLayouts.some(occ => isAdjacent(layout, occ));
+            
+            if (isNearOccupied) {
+              emptySpotsAdded++;
+              initializedNodes.push({
+                id: `empty_${index}`,
+                type: 'sector',
+                position: { x: layout.x, y: layout.y },
+                data: {
+                  width: layout.width,
+                  height: layout.height,
+                  isEmpty: true,
+                  layoutX: layout.x,
+                  layoutY: layout.y,
+                  onCreateClick: () => setPendingNewSector({ x: layout.x, y: layout.y })
+                }
+              });
+            }
+          }
+        });
+
+        // Failsafe: if somehow NO empty spots were added (e.g. they reached the edge of adjacency), 
+        // forcibly add the FIRST available unused slot so they can ALWAYS expand.
+        if (emptySpotsAdded === 0) {
+            const fallbackIndex = layoutMap.findIndex((_, i) => !usedLayoutIndices.has(i));
+            if (fallbackIndex !== -1) {
+                const fl = layoutMap[fallbackIndex];
+                initializedNodes.push({
+                    id: `empty_${fallbackIndex}`,
+                    type: 'sector',
+                    position: { x: fl.x, y: fl.y },
+                    data: {
+                      width: fl.width,
+                      height: fl.height,
+                      isEmpty: true,
+                      layoutX: fl.x,
+                      layoutY: fl.y,
+                      onCreateClick: () => setPendingNewSector({ x: fl.x, y: fl.y })
+                    }
+                });
+            }
+        }
+
         setNodes(initializedNodes);
 
         const initializedEdges = estradas.map(estrada => ({
