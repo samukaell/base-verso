@@ -101,7 +101,7 @@ function FlowMap() {
           baseId: primeiraBase.id
         };
         
-        const layoutMap = [
+        const oldLayoutMap = [
           // Original core (12)
           { x: 0, y: 0, width: 250, height: 200 },     
           { x: 0, y: 220, width: 250, height: 150 },   
@@ -146,20 +146,47 @@ function FlowMap() {
           { x: -540, y: 730, width: 250, height: 200 }
         ];
 
+        // Maps original coordinates to spaced-out coordinates to allow for 3D extrusion gaps
+        const mapX = (x) => {
+          const map = { '-540': -580, '-270': -290, '0': 0, '270': 290, '440': 480, '710': 770, '860': 920, '1080': 1160, '1200': 1300, '1320': 1440 };
+          return map[x] !== undefined ? map[x] : x;
+        };
+        const mapY = (y) => {
+          const map = { '-220': -240, '0': 0, '150': 170, '220': 240, '390': 430, '420': 460, '560': 620, '730': 810 };
+          return map[y] !== undefined ? map[y] : y;
+        };
+
+        const layoutMap = oldLayoutMap.map(l => ({
+          ...l,
+          oldX: l.x,
+          oldY: l.y,
+          x: mapX(l.x),
+          y: mapY(l.y)
+        }));
+
         // Dynamically append a massive grid around the edges to ensure infinite expansion
-        const gap = 20;
+        const gap = 40;
         const eWidth = 250;
         const eHeight = 150;
         
         // Add 500 extra slots around the core area
-        for(let r = -5; r <= 8; r++) {
-            for(let c = -5; c <= 8; c++) {
-               // roughly avoid the core area coordinates (0 to 1320, 0 to 730)
+        for(let r = -6; r <= 10; r++) {
+            for(let c = -6; c <= 10; c++) {
                const bx = c * (eWidth + gap);
                const by = r * (eHeight + gap);
                
-               // If it's outside the handcrafted bounding box, add it to layout map
-               if (bx < -600 || bx > 1500 || by < -300 || by > 900) {
+               // Precise overlap check against all handcrafted blocks
+               let overlaps = false;
+               for (let hl of layoutMap) {
+                   // A gap of 10 is used for collision detection to allow standard gaps without triggering false positives
+                   if (bx < hl.x + hl.width + 10 && bx + eWidth > hl.x - 10 &&
+                       by < hl.y + hl.height + 10 && by + eHeight > hl.y - 10) {
+                       overlaps = true;
+                       break;
+                   }
+               }
+               
+               if (!overlaps) {
                    layoutMap.push({ x: bx, y: by, width: eWidth, height: eHeight });
                }
             }
@@ -171,9 +198,12 @@ function FlowMap() {
 
         // 1. Process all existing sectors
         setores.forEach((setor) => {
-          let layoutIndex = layoutMap.findIndex(l => 
-             setor.posicao && l.x === Math.round(setor.posicao.x) && l.y === Math.round(setor.posicao.y)
-          );
+          let layoutIndex = layoutMap.findIndex(l => {
+             if (!setor.posicao) return false;
+             const px = Math.round(setor.posicao.x);
+             const py = Math.round(setor.posicao.y);
+             return (l.x === px && l.y === py) || (l.oldX === px && l.oldY === py);
+          });
           
           if (layoutIndex === -1) {
             layoutIndex = layoutMap.findIndex((_, i) => !usedLayoutIndices.has(i));
@@ -187,6 +217,7 @@ function FlowMap() {
               id: setor.id,
               type: 'sector',
               position: { x: layout.x, y: layout.y },
+              zIndex: 1000 + Math.round(layout.x + layout.y), // Higher z-index for bottom-right nodes to simulate isometric depth
               data: {
                 ...setor,
                 width: layout.width,
@@ -200,9 +231,9 @@ function FlowMap() {
         });
 
         // 2. Generate adjacent empty lots
-        // A layout is adjacent if its bounds are within 50px of any occupied layout
+        // A layout is adjacent if its bounds are within 60px of any occupied layout
         const isAdjacent = (l1, l2) => {
-           const gapTolerance = 50;
+           const gapTolerance = 60;
            const overlapX = l1.x <= (l2.x + l2.width + gapTolerance) && (l1.x + l1.width + gapTolerance) >= l2.x;
            const overlapY = l1.y <= (l2.y + l2.height + gapTolerance) && (l1.y + l1.height + gapTolerance) >= l2.y;
            return overlapX && overlapY;
@@ -220,6 +251,7 @@ function FlowMap() {
                 id: `empty_${index}`,
                 type: 'sector',
                 position: { x: layout.x, y: layout.y },
+                zIndex: 0, // Ensure empty spots stay at the back
                 data: {
                   width: layout.width,
                   height: layout.height,
@@ -243,6 +275,7 @@ function FlowMap() {
                     id: `empty_${fallbackIndex}`,
                     type: 'sector',
                     position: { x: fl.x, y: fl.y },
+                    zIndex: 0,
                     data: {
                       width: fl.width,
                       height: fl.height,
@@ -346,7 +379,7 @@ function FlowMap() {
         type: 'smoothstep', // Use orthogonal routing to look like streets
         animated: !isTrouble,
         label: isHovered ? edge.label : undefined,
-        zIndex: isHovered ? 1000 : 0, // Boost zIndex when hovered to show on top of everything
+        zIndex: isHovered ? 99999 : 0, // Boost zIndex massively to stay above the 3D depth of nodes
         style: {
           ...edge.style,
           stroke: isTrouble ? '#7f1d1d' : '#1e293b', // darker streets
