@@ -21,90 +21,68 @@ export default function SectorNode({ data, selected }) {
 
   const hasTrouble = status !== 'OPERANDO';
 
+  if (data.isEmpty) {
+    return (
+      <div 
+        style={{ width: data.width || 200, height: data.height || 150, backgroundColor: '#708066' }}
+        className="border-[6px] border-[#5a6652] transition-colors flex items-center justify-center cursor-pointer shadow-sm group hover:brightness-110"
+        onClick={() => data.onCreateClick && data.onCreateClick()}
+      >
+        <div className="flex flex-col items-center opacity-50 group-hover:opacity-100 transition-opacity">
+          <div className="w-10 h-10 rounded-full bg-[#5a6652] text-white flex items-center justify-center mb-2">
+            <span className="text-2xl font-bold">+</span>
+          </div>
+          <span className="text-white/80 font-bold uppercase text-sm">Lote Vazio</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(
-      "w-72 rounded-xl border border-slate-700 bg-slate-900/80 backdrop-blur-md shadow-lg overflow-hidden transition-all duration-200",
-      selected && "border-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.3)]",
-      hasTrouble && "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]"
-    )}>
+    <div 
+      style={{ width: data.width || 200, height: data.height || 150, backgroundColor: '#ff194b' }}
+      className={cn(
+        "border-[6px] border-slate-900 shadow-sm flex flex-col transition-all duration-200",
+        selected && "border-sky-400 shadow-md",
+        hasTrouble && "border-red-900 brightness-50"
+      )}
+    >
       {/* Input Handle */}
-      <Handle type="target" position={Position.Top} className="!w-4 !h-4 !bg-emerald-400 border-2 !border-slate-900 cursor-crosshair shadow-[0_0_10px_rgba(52,211,153,0.8)] z-50" />
+      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-[#ff194b] !border-slate-900 cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
       
       {/* Header */}
       <div className={cn(
-        "px-3 py-2 flex items-center justify-between border-b border-slate-700/50",
-        hasTrouble ? "bg-red-500/20" : "bg-slate-800/50"
+        "px-2 py-2 flex-grow flex flex-col items-center justify-center text-center",
+        hasTrouble && "bg-black/30"
       )}>
-        <div className="flex flex-col justify-center max-w-[200px]">
-          <span className="font-bold text-sm text-slate-100 truncate block">{nome}</span>
-          <span className={cn("text-xs font-medium", hasTrouble ? "text-red-400" : "text-emerald-400")}>
-            {hasTrouble ? "CONFLITO / INATIVO" : "OPERANDO"}
-          </span>
-        </div>
+        <span className="font-bold text-2xl text-white leading-tight drop-shadow-md">{nome}</span>
+        {data.playerInfo && (
+          <span className="text-xs font-bold text-white/80 mt-1 uppercase">Centro</span>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center bg-slate-800 p-1">
+        <span className={cn("text-[10px] font-bold px-1", hasTrouble ? "text-red-400" : "text-emerald-400")}>
+          {hasTrouble ? "INATIVO" : "OPERANDO"}
+        </span>
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onToggleTrouble && onToggleTrouble();
           }}
           className={cn(
-            "p-1.5 rounded-md transition-colors",
-            hasTrouble ? "text-red-400 bg-red-400/10 hover:bg-red-400/20" : "text-slate-500 hover:text-slate-300 hover:bg-slate-700"
+            "p-1 transition-colors",
+            hasTrouble ? "text-red-400 hover:text-red-300" : "text-slate-400 hover:text-slate-200"
           )}
-          title="Alternar Status"
         >
-          <ShieldAlert className="w-5 h-5" />
+          <ShieldAlert className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Body */}
-      <div className="p-3 space-y-3">
-        {/* Nível de Defesa */}
-        <div className="flex items-center gap-2 text-xs bg-slate-800/50 p-1.5 rounded-lg border border-slate-700/50">
-          <Shield className="w-4 h-4 text-sky-400" />
-          <span className="text-slate-300">Nível de Defesa:</span>
-          <span className="font-bold text-sky-400 ml-auto">{nivel_defesa}</span>
-        </div>
-
-        {/* Player Info (apenas Hub) */}
-        {data.playerInfo && (
-          <div className="bg-sky-900/40 p-2 rounded-lg border border-sky-700/50">
-            <div className="text-[10px] text-sky-300 font-bold uppercase tracking-wider mb-1">Comando Central</div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-slate-300">Comandante: <span className="text-white font-bold">{data.playerInfo.nome}</span></span>
-              <span className="text-[10px] text-slate-300">ID Jogador: <span className="text-sky-300 font-mono">{data.playerInfo.id}</span></span>
-              <span className="text-[10px] text-slate-300">ID Base: <span className="text-sky-300 font-mono">{data.playerInfo.baseId}</span></span>
-            </div>
-          </div>
-        )}
-
-        {/* Counters */}
-        <div className="grid grid-cols-3 gap-2">
-          
-          <div className="flex flex-col items-center justify-center bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
-            <Factory className="w-4 h-4 text-purple-400 mb-1" />
-            <span className="text-xs text-slate-400">Fábricas</span>
-            <span className="text-sm font-bold text-slate-200">{fabricas.length}</span>
-          </div>
-
-          <div className="flex flex-col items-center justify-center bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
-            <Zap className="w-4 h-4 text-emerald-400 mb-1" />
-            <span className="text-xs text-slate-400">Energia</span>
-            <span className="text-sm font-bold text-slate-200">{distritos_energia.length}</span>
-          </div>
-
-          <div className="flex flex-col items-center justify-center bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
-            <Database className="w-4 h-4 text-amber-400 mb-1" />
-            <span className="text-xs text-slate-400">Silos</span>
-            <span className="text-sm font-bold text-slate-200">{distritos_armazenamento.length}</span>
-          </div>
-
-        </div>
-      </div>
-
       {/* Output Handle */}
-      <Handle type="source" position={Position.Bottom} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
-      <Handle id="right" type="source" position={Position.Right} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
-      <Handle id="left" type="source" position={Position.Left} className="!w-4 !h-4 !bg-indigo-400 border-2 !border-slate-900 cursor-crosshair hover:!bg-indigo-300 transition-colors shadow-[0_0_10px_rgba(99,102,241,0.8)] z-50" />
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-[#ff194b] !border-slate-900 cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
+      <Handle id="right" type="source" position={Position.Right} className="!w-3 !h-3 !bg-[#ff194b] !border-slate-900 cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
+      <Handle id="left" type="source" position={Position.Left} className="!w-3 !h-3 !bg-[#ff194b] !border-slate-900 cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
     </div>
   );
 }

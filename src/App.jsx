@@ -14,6 +14,7 @@ import SectorNode from './components/SectorNode';
 import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 import CreateRoadModal from './components/CreateRoadModal';
+import CreateSectorModal from './components/CreateSectorModal';
 import { fetchPlayerData, updateSetorStatus } from './request/request';
 
 function FlowMap() {
@@ -24,6 +25,16 @@ function FlowMap() {
   const [isLoading, setIsLoading] = useState(true);
   const [baseId, setBaseId] = useState(null);
   const [pendingConnection, setPendingConnection] = useState(null);
+  const [pendingNewSector, setPendingNewSector] = useState(null);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
+
+  const onEdgeMouseEnter = useCallback((event, edge) => {
+    setHoveredEdgeId(edge.id);
+  }, []);
+
+  const onEdgeMouseLeave = useCallback((event, edge) => {
+    setHoveredEdgeId(null);
+  }, []);
 
   const handleToggleTrouble = useCallback((nodeId) => {
     setNodes((nds) => {
@@ -83,17 +94,54 @@ function FlowMap() {
           nome: responseObj.nome,
           baseId: primeiraBase.id
         };
+        
+        const layoutMap = [
+          { x: 0, y: 0, width: 250, height: 200 },     
+          { x: 0, y: 220, width: 250, height: 150 },   
+          { x: 0, y: 390, width: 250, height: 150 },   
+          { x: 270, y: 0, width: 150, height: 370 },   
+          { x: 440, y: 150, width: 250, height: 390 }, 
+          { x: 440, y: 0, width: 400, height: 130 },   
+          { x: 710, y: 150, width: 350, height: 390 }, 
+          { x: 1080, y: 150, width: 100, height: 390 },
+          { x: 1200, y: 150, width: 100, height: 250 },
+          { x: 0, y: 560, width: 420, height: 150 }, // empty spot
+          { x: 440, y: 560, width: 620, height: 150 }, // empty spot
+          { x: 1080, y: 560, width: 220, height: 150 } // empty spot
+        ];
 
-        const initializedNodes = setores.map(setor => ({
-          id: setor.id,
-          type: 'sector',
-          position: setor.posicao || { x: Math.random() * 500, y: Math.random() * 500 }, // fallback
-          data: {
-            ...setor,
-            playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
-            onToggleTrouble: () => handleToggleTrouble(setor.id)
+        const initializedNodes = layoutMap.map((layout, index) => {
+          const setor = setores[index];
+          if (setor) {
+            return {
+              id: setor.id,
+              type: 'sector',
+              position: { x: layout.x, y: layout.y },
+              data: {
+                ...setor,
+                width: layout.width,
+                height: layout.height,
+                playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
+                onToggleTrouble: () => handleToggleTrouble(setor.id),
+                isEmpty: false
+              }
+            };
+          } else {
+            return {
+              id: `empty_${index}`,
+              type: 'sector',
+              position: { x: layout.x, y: layout.y },
+              data: {
+                width: layout.width,
+                height: layout.height,
+                isEmpty: true,
+                layoutX: layout.x,
+                layoutY: layout.y,
+                onCreateClick: () => setPendingNewSector({ x: layout.x, y: layout.y })
+              }
+            };
           }
-        }));
+        });
         setNodes(initializedNodes);
 
         const initializedEdges = estradas.map(estrada => ({
@@ -132,6 +180,7 @@ function FlowMap() {
   }, [loadData]);
 
   const onNodeClick = useCallback((event, node) => {
+    if (node.data?.isEmpty) return;
     setSelectedNodeId(node.id);
   }, []);
 
@@ -177,18 +226,27 @@ function FlowMap() {
     return edges.map(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       const isTrouble = sourceNode?.data?.status !== 'OPERANDO';
+      const isHovered = edge.id === hoveredEdgeId;
       
       return {
         ...edge,
+        type: 'smoothstep', // Use orthogonal routing to look like streets
         animated: !isTrouble,
+        label: isHovered ? edge.label : undefined,
+        zIndex: isHovered ? 1000 : 0, // Boost zIndex when hovered to show on top of everything
         style: {
           ...edge.style,
-          stroke: isTrouble ? '#ef4444' : edge.style.stroke,
-          strokeWidth: isTrouble ? 3 : 2
-        }
+          stroke: isTrouble ? '#7f1d1d' : '#1e293b', // darker streets
+          strokeWidth: isHovered ? (isTrouble ? 6 : 5) : (isTrouble ? 4 : 3), // Make edge thicker when hovered
+          cursor: 'pointer' // Add pointer cursor
+        },
+        labelBgPadding: [12, 6],
+        labelBgBorderRadius: 6,
+        labelBgStyle: { fill: '#ffffff', fillOpacity: 1, stroke: '#1e293b', strokeWidth: 2 },
+        labelStyle: { fill: '#0f172a', fontWeight: 'bold', fontSize: 14, fontFamily: 'sans-serif' },
       };
     });
-  }, [edges, nodes]);
+  }, [edges, nodes, hoveredEdgeId]);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
@@ -224,12 +282,14 @@ function FlowMap() {
         onNodesDelete={onNodesDelete}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        onEdgeMouseEnter={onEdgeMouseEnter}
+        onEdgeMouseLeave={onEdgeMouseLeave}
         nodeTypes={nodeTypes}
         fitView
-        className="bg-slate-950"
+        style={{ backgroundColor: '#8fa080' }}
+        nodesDraggable={false}
       >
-        <Background color="#1e293b" gap={24} size={2} />
-        <Controls className="!bg-slate-800 !border-slate-700 !fill-slate-300" />
+        <Controls className="!bg-white !border-slate-300 !fill-slate-700" />
       </ReactFlow>
 
       {pendingConnection && (
@@ -237,6 +297,18 @@ function FlowMap() {
           connection={pendingConnection}
           nodes={nodes}
           onClose={() => setPendingConnection(null)}
+        />
+      )}
+
+      {pendingNewSector && (
+        <CreateSectorModal 
+          baseId={baseId}
+          defaultX={pendingNewSector.x}
+          defaultY={pendingNewSector.y}
+          onClose={(shouldReload) => {
+            setPendingNewSector(null);
+            if (shouldReload) loadData();
+          }}
         />
       )}
     </div>
