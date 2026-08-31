@@ -261,3 +261,27 @@ export async function reativarProcesso(processoId, forcarLoop = true) {
     return { success: false, message: err.message };
   }
 }
+
+/**
+ * Define ou altera o setor provedor de energia de um setor.
+ * @param {string} setorClienteId - ID do setor que receberá a energia (ex: 'SAM_SET_02')
+ * @param {string|null} [setorProvedorId=null] - ID do setor com usina geradora, ou null para desconectar
+ */
+export async function definirProvedorEnergia(setorClienteId, setorProvedorId = null) {
+  try {
+    const { data, error } = await supabase.rpc('vincular_provedor_energia_setor', {
+      p_setor_cliente_id: setorClienteId,
+      p_setor_provedor_id: setorProvedorId,
+    });
+
+    if (error) {
+      console.error('Erro na RPC vincular_provedor_energia_setor:', error.message);
+      return { success: false, message: error.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro inesperado ao vincular energia:', err);
+    return { success: false, message: err.message };
+  }
+}

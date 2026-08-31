@@ -7,7 +7,7 @@ import AddInstallationModal from './AddInstallationModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TransferStockModal from './TransferStockModal';
 import { deletarFabrica, deletarArmazenamento, deletarEnergia, deletarSetor } from '../services/deleteService';
-import { reativarProcesso } from '../request/request';
+import { reativarProcesso, definirProvedorEnergia, updateSetorStatus } from '../request/request';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -64,6 +64,22 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
       message: "ATENÇÃO! Tem certeza que deseja destruir o setor inteiro? Isso apagará a estrutura, fábricas, silos e geradores presentes nele de forma IRREVERSÍVEL.",
       action: async () => await deletarSetor(id)
     });
+  };
+
+  const handleDefinirProvedor = async (e) => {
+    const selectedProviderId = e.target.value === "" ? null : e.target.value;
+    const result = await definirProvedorEnergia(node?.id, selectedProviderId);
+    
+    if (result && result.success !== false) {
+      if (selectedProviderId) {
+        await updateSetorStatus(node.id, 'OPERANDO');
+      } else {
+        await updateSetorStatus(node.id, 'SEM_ENERGIA');
+      }
+      window.location.reload();
+    } else {
+      alert("Erro ao alterar provedor: " + (result?.message || "Erro desconhecido"));
+    }
   };
 
   if (!node) return null;
@@ -142,12 +158,32 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
         )}
 
         {/* Distritos de Energia ou Energia Recebida */}
-        {(data.distritos_energia?.length > 0 || (data.setor_energia_provedor_id && data.setor_energia_provedor_id !== data.id)) && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
-            </h3>
-            <div className="space-y-3">
+        <div className="mb-6">
+          <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
+          </h3>
+          <div className="space-y-3">
+            
+            {/* Selector de Provedor (Apenas para setores sem geração própria) */}
+            {!(data.distritos_energia?.length > 0) && (
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Conectar a Provedor</label>
+                <select 
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded text-sm outline-none focus:border-sky-500"
+                  value={data.setor_energia_provedor_id || ""}
+                  onChange={handleDefinirProvedor}
+                >
+                  <option value="">Sem Energia (Inativo)</option>
+                  {nodes
+                    .filter(n => !n.data.isEmpty && n.data.distritos_energia?.length > 0)
+                    .map(n => (
+                      <option key={n.id} value={n.id}>
+                        {n.data.nome} (Livre: {Number(n.data.restante_kwh_hora || 0).toFixed(0)} kWh)
+                      </option>
+                  ))}
+                </select>
+              </div>
+            )}
               
               {/* Barra de Energia Restante (Se o Setor for Provedor) */}
               {data.restante_kwh_hora != null && Number(data.producao_kwh_hora) > 0 && (
@@ -237,7 +273,6 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
               ))}
             </div>
           </div>
-        )}
 
         {/* Fábricas e Processos */}
         {data.fabricas && data.fabricas.length > 0 && (

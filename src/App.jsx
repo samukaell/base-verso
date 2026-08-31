@@ -41,6 +41,12 @@ function FlowMap() {
       const targetNode = nds.find((n) => n.id === nodeId);
       if (!targetNode) return nds;
 
+      // Prevent toggling if the sector is currently without energy
+      if (targetNode.data.status === 'SEM_ENERGIA') {
+        console.warn("Não é possível alterar manualmente o status de um setor sem energia.");
+        return nds;
+      }
+
       const newStatus = targetNode.data.status === 'OPERANDO' ? 'INTERDITADO' : 'OPERANDO';
       const dependentStatus = newStatus === 'INTERDITADO' ? 'SEM_ENERGIA' : 'OPERANDO';
 
