@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, MapPin, Shield, Zap } from 'lucide-react';
 import { criarNovoSetor, listarEstruturasBase } from '../request/request';
 
-export default function CreateSectorModal({ baseId, onClose }) {
+export default function CreateSectorModal({ baseId, onClose, defaultX = 0, defaultY = 0 }) {
   const [formData, setFormData] = useState({
     nome: '',
-    posicaoX: 0,
-    posicaoY: 0,
+    posicaoX: defaultX,
+    posicaoY: defaultY,
     nivelDefesa: 1,
     provedorEnergiaId: ''
   });
