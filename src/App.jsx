@@ -15,9 +15,9 @@ import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 import CreateRoadModal from './components/CreateRoadModal';
 import CreateSectorModal from './components/CreateSectorModal';
-import { fetchPlayerData, updateSetorStatus } from './request/request';
+import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase } from './request/request';
 
-function FlowMap() {
+function FlowMap({ playerId, onLogout }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [dayCount, setDayCount] = useState(1);
@@ -82,15 +82,24 @@ function FlowMap() {
   }, [setNodes]);
 
   const loadData = useCallback(async () => {
+    if (!playerId) return;
     setIsLoading(true);
     try {
-      const data = await fetchPlayerData('A26-I99'); // using new ID
+      const data = await fetchPlayerData(playerId);
       
       const responseObj = Array.isArray(data) ? data[0] : data;
 
       if (responseObj && responseObj.bases && responseObj.bases.length > 0) {
         const primeiraBase = responseObj.bases[0];
         setBaseId(primeiraBase.id); // store baseId
+
+        let globalProcessos = [];
+        try {
+          const procRes = await listarTodosProcessosBase(primeiraBase.id);
+          if (procRes && procRes.processos) {
+            globalProcessos = procRes.processos;
+          }
+        } catch(e) { console.error("Erro ao carregar processos:", e); }
 
         const setores = primeiraBase.setores || [];
         const estradas = primeiraBase.estradas || [];
@@ -223,6 +232,7 @@ function FlowMap() {
                 width: layout.width,
                 height: layout.height,
                 playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
+                processos_ativos_count: globalProcessos.filter(p => p.setor?.id === setor.id && p.status_processo !== 'CONCLUIDO').length,
                 onToggleTrouble: () => handleToggleTrouble(setor.id),
                 isEmpty: false
               }
@@ -407,9 +417,10 @@ function FlowMap() {
 
   return (
     <div className="w-screen h-screen relative">
-      <HUD dayCount={dayCount} baseId={baseId} onTimeSkipComplete={onTimeSkipComplete} />
+      <HUD dayCount={dayCount} baseId={baseId} onTimeSkipComplete={onTimeSkipComplete} onLogout={onLogout} playerId={playerId} />
       
       <DetailsPanel 
+        baseId={baseId}
         node={selectedNode} 
         providerNode={nodes.find(n => n.id === selectedNode?.data?.setor_energia_provedor_id)}
         onClose={() => setSelectedNodeId(null)} 
@@ -460,11 +471,110 @@ function FlowMap() {
     </div>
   );
 }
+const AnimatedCityBackground = () => {
+  const blocks = [
+    { type: 'red', x: 50, y: 150 },
+    { type: 'gray', x: 250, y: 300 },
+    { type: 'red', x: 100, y: 550 },
+    { type: 'red', x: 450, y: 200 },
+    { type: 'gray', x: 600, y: 100 },
+    { type: 'red', x: 650, y: 600 },
+    { type: 'gray', x: 800, y: 350 },
+    { type: 'red', x: 950, y: 200 },
+    { type: 'red', x: 1100, y: 500 },
+    { type: 'gray', x: 1300, y: 400 },
+    { type: 'red', x: 1450, y: 100 },
+    { type: 'red', x: 1600, y: 650 },
+  ];
+
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-black z-0 pointer-events-none opacity-40">
+       <style>{`
+         @keyframes scroll-city {
+           0% { transform: translateX(0); }
+           100% { transform: translateX(-1800px); }
+         }
+         .city-scroller {
+           display: flex;
+           width: 3600px;
+           animation: scroll-city 35s linear infinite;
+         }
+         .city-red-front { background-color: #ff194b; border: 6px solid black; position: absolute; inset: 0; z-index: 10; }
+         .city-red-right { background-color: #800015; border: 6px solid black; border-left: 0; position: absolute; top: 0; left: 100%; width: 50px; height: 100%; transform: skewY(45deg); transform-origin: top left; z-index: 0; }
+         .city-red-bottom { background-color: #b30026; border: 6px solid black; border-top: 0; position: absolute; top: 100%; left: 0; width: 100%; height: 50px; transform: skewX(45deg); transform-origin: top left; z-index: 0; }
+         
+         .city-gray-front { background-color: #708066; border: 6px solid black; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; }
+         .city-gray-plus { color: white; font-weight: bold; font-size: 3rem; opacity: 0.3; }
+       `}</style>
+       <div className="city-scroller h-full relative">
+         {[1, 2].map((group) => (
+           <div key={`group-${group}`} className="relative w-[1800px] h-full shrink-0">
+             {blocks.map((b, i) => (
+               <div key={`b-${group}-${i}`} className="absolute" style={{ left: b.x, top: b.y, width: 180, height: 120, zIndex: b.y }}>
+                 {b.type === 'red' ? (
+                   <>
+                     <div className="city-red-right" />
+                     <div className="city-red-bottom" />
+                     <div className="city-red-front" />
+                   </>
+                 ) : (
+                   <div className="city-gray-front">
+                     <span className="city-gray-plus">+</span>
+                   </div>
+                 )}
+               </div>
+             ))}
+           </div>
+         ))}
+       </div>
+    </div>
+  );
+};
 
 export default function App() {
+  const [playerId, setPlayerId] = useState(() => localStorage.getItem('rpg_player_id') || null);
+
+  if (!playerId) {
+    return (
+      <div className="w-screen h-screen bg-black flex flex-col items-center justify-center font-sans relative">
+        <AnimatedCityBackground />
+        <div className="bg-slate-900 border-[6px] border-slate-800 p-10 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] w-full max-w-md text-center relative z-10">
+          <h1 className="text-3xl font-bold tracking-widest text-white mb-2 drop-shadow-md">Gerenciador de recurso</h1>
+          <h2 className="text-xl font-bold tracking-widest text-sky-400 mb-8 drop-shadow-md">V1.2</h2>
+          
+          <div className="text-left">
+            <label className="block text-slate-400 text-sm font-bold mb-3 uppercase tracking-wider">
+              Selecione o Comandante
+            </label>
+            <select 
+              className="w-full bg-slate-800 border-2 border-slate-700 text-white p-4 rounded-lg outline-none focus:border-sky-500 mb-2 text-lg appearance-none cursor-pointer"
+              onChange={(e) => {
+                if (e.target.value) {
+                  localStorage.setItem('rpg_player_id', e.target.value);
+                  setPlayerId(e.target.value);
+                }
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled>Escolha um perfil...</option>
+              <option value="A26-I99">A26-I99 - Samuel</option>
+              <option value="C1214-B8">C1214-B8 - Ruan</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ReactFlowProvider>
-      <FlowMap />
+      <FlowMap 
+        playerId={playerId} 
+        onLogout={() => {
+          localStorage.removeItem('rpg_player_id');
+          setPlayerId(null);
+        }} 
+      />
     </ReactFlowProvider>
   );
 }

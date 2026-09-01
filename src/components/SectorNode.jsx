@@ -38,28 +38,53 @@ export default function SectorNode({ data, selected }) {
       style={{ width: data.width || 200, height: data.height || 150 }}
       className="relative group"
     >
-      {/* Right Face (3D depth) */}
+      {/* Wrapper that translates the building down to the ground */}
       <div 
-        className="absolute bg-[#800015] border-[6px] border-black border-l-0 origin-top-left pointer-events-none"
-        style={{ top: 0, left: '100%', width: '25px', height: '100%', transform: 'skewY(45deg)', zIndex: 0 }} 
-      />
-      
-      {/* Bottom Face (3D depth) */}
-      <div 
-        className="absolute bg-[#b30026] border-[6px] border-black border-t-0 origin-top-left pointer-events-none"
-        style={{ top: '100%', left: 0, width: '100%', height: '25px', transform: 'skewX(45deg)', zIndex: 0 }} 
-      />
-
-      {/* Front Face */}
-      <div 
-        style={{ backgroundColor: '#ff194b' }}
-        className={cn(
-          "absolute inset-0 border-[6px] border-black flex flex-col transition-all duration-200 z-10",
-          selected && "border-white shadow-[0_0_15px_rgba(255,255,255,0.5)]",
-          hasTrouble && "brightness-50"
-        )}
+        className="absolute inset-0 transition-transform duration-700 ease-in-out"
+        style={{ transform: hasTrouble ? 'translate(25px, 25px)' : 'translate(0px, 0px)' }}
       >
-        {/* Input Handle */}
+        {/* Right Face (3D depth) */}
+        <div 
+          className={cn(
+            "absolute bg-[#800015] border-black border-l-0 origin-top-left pointer-events-none transition-all duration-700 ease-in-out",
+            hasTrouble ? "border-0" : "border-[6px]"
+          )}
+          style={{ 
+            top: 0, 
+            left: '100%', 
+            width: hasTrouble ? '0px' : '25px', 
+            height: '100%', 
+            transform: 'skewY(45deg)', 
+            zIndex: 0 
+          }} 
+        />
+        
+        {/* Bottom Face (3D depth) */}
+        <div 
+          className={cn(
+            "absolute bg-[#b30026] border-black border-t-0 origin-top-left pointer-events-none transition-all duration-700 ease-in-out",
+            hasTrouble ? "border-0" : "border-[6px]"
+          )}
+          style={{ 
+            top: '100%', 
+            left: 0, 
+            width: '100%', 
+            height: hasTrouble ? '0px' : '25px', 
+            transform: 'skewX(45deg)', 
+            zIndex: 0 
+          }} 
+        />
+
+        {/* Front Face */}
+        <div 
+          style={{ backgroundColor: '#ff194b' }}
+          className={cn(
+            "absolute inset-0 border-[6px] border-black flex flex-col transition-all duration-700 ease-in-out z-10",
+            selected && "border-white shadow-[0_0_15px_rgba(255,255,255,0.5)]",
+            hasTrouble && "brightness-50"
+          )}
+        >
+          {/* Input Handle */}
         <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
         
         {/* Header */}
@@ -72,6 +97,12 @@ export default function SectorNode({ data, selected }) {
             <span className="text-xs font-bold text-white/80 mt-1 uppercase">Centro</span>
           )}
         </div>
+
+        {data.processos_ativos_count > 0 && (
+          <div className="absolute top-[-10px] right-[-10px] bg-amber-500 border-[3px] border-black text-black font-bold text-[10px] px-2 py-0.5 z-50 animate-pulse shadow-lg whitespace-nowrap">
+            {data.processos_ativos_count} PROCESSO(S)
+          </div>
+        )}
 
         {/* Footer (Icons) */}
         <div className="bg-black/20 px-2 py-1 flex items-center justify-between border-t-[3px] border-black">
@@ -100,6 +131,7 @@ export default function SectorNode({ data, selected }) {
         <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
         <Handle id="right" type="source" position={Position.Right} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
         <Handle id="left" type="source" position={Position.Left} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
+      </div>
       </div>
     </div>
   );
