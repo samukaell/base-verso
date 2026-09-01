@@ -532,7 +532,36 @@ const AnimatedCityBackground = () => {
 };
 
 export default function App() {
-  const [playerId, setPlayerId] = useState(() => localStorage.getItem('rpg_player_id') || null);
+  const [playerId, setPlayerId] = useState(() => {
+    try {
+      // Migrate old format if exists
+      const oldId = localStorage.getItem('rpg_player_id');
+      if (oldId) {
+        localStorage.removeItem('rpg_player_id');
+        localStorage.setItem('rpg_player_session', JSON.stringify({
+          id: oldId,
+          date: new Date().toLocaleDateString()
+        }));
+        return oldId;
+      }
+
+      const saved = localStorage.getItem('rpg_player_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const today = new Date().toLocaleDateString();
+        
+        // Se a data salva for hoje, mantém o login. Caso contrário, expira (exige login de novo no dia seguinte)
+        if (parsed.date === today) {
+          return parsed.id;
+        } else {
+          localStorage.removeItem('rpg_player_session');
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao ler cache do jogador", e);
+    }
+    return null;
+  });
 
   if (!playerId) {
     return (
@@ -550,7 +579,10 @@ export default function App() {
               className="w-full bg-slate-800 border-2 border-slate-700 text-white p-4 rounded-lg outline-none focus:border-sky-500 mb-2 text-lg appearance-none cursor-pointer"
               onChange={(e) => {
                 if (e.target.value) {
-                  localStorage.setItem('rpg_player_id', e.target.value);
+                  localStorage.setItem('rpg_player_session', JSON.stringify({
+                    id: e.target.value,
+                    date: new Date().toLocaleDateString()
+                  }));
                   setPlayerId(e.target.value);
                 }
               }}
@@ -571,7 +603,7 @@ export default function App() {
       <FlowMap 
         playerId={playerId} 
         onLogout={() => {
-          localStorage.removeItem('rpg_player_id');
+          localStorage.removeItem('rpg_player_session');
           setPlayerId(null);
         }} 
       />
