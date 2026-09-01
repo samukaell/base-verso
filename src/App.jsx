@@ -41,9 +41,12 @@ function FlowMap({ playerId, onLogout }) {
       const targetNode = nds.find((n) => n.id === nodeId);
       if (!targetNode) return nds;
 
-      // Prevent toggling if the sector is currently without energy
-      if (targetNode.data.status === 'SEM_ENERGIA') {
-        console.warn("Não é possível alterar manualmente o status de um setor sem energia.");
+      const isSelfPowered = targetNode.data.distritos_energia && targetNode.data.distritos_energia.length > 0;
+      const isSelfProvided = targetNode.data.setor_energia_provedor_id === targetNode.id;
+
+      // Prevent toggling if the sector is currently without energy, unless it produces its own
+      if (targetNode.data.status === 'SEM_ENERGIA' && !isSelfPowered && !isSelfProvided) {
+        console.warn("Não é possível alterar manualmente o status de um setor sem energia dependente de outro.");
         return nds;
       }
 

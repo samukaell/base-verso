@@ -40,9 +40,13 @@ export default function AddInstallationModal({ setorId, onClose }) {
       payload.energia = { 
         nome, 
         tipo_geracao: tipoGeracao, 
-        producao_kwh_hora: producao 
+        producao_kwh_hora: producao,
+        producao_kwh: producao, // fallback
+        producao: producao // fallback
       };
     }
+
+    console.log("Enviando payload para instalação:", payload);
 
     const result = await adicionarInstalacoesSetor(payload);
 
@@ -151,7 +155,7 @@ export default function AddInstallationModal({ setorId, onClose }) {
           {/* Campos Específicos: Energia */}
           {tipo === 'energia' && (
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="space-y-1">
+              <div className="space-y-1 col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo de Geração</label>
                 <select
                   value={tipoGeracao}
@@ -162,17 +166,41 @@ export default function AddInstallationModal({ setorId, onClose }) {
                   <option value="FUSAO">Fusão Nuclear</option>
                   <option value="EOLICA">Eólica</option>
                   <option value="GEOTERMICA">Geotérmica</option>
+                  <option value="HIDRELETRICA">Hidrelétrica</option>
+                  <option value="TERMELETRICA">Termelétrica</option>
+                  <option value="BIOMASSA">Biomassa</option>
+                  <option value="MAREMOTRIZ">Maremotriz</option>
+                  <option value="ONDOMOTRIZ">Ondomotriz</option>
+                  <option value="TERMOSSOLAR">Termossolar</option>
                 </select>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Produção (kWh)</label>
+              <div className="space-y-2 col-span-2">
+                <div className="flex justify-between items-end">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Capacidade de Produção (0 - 4.000 MWh)</label>
+                  <span className="text-sm font-bold text-emerald-400">
+                    {producao >= 1000 
+                      ? `${(producao / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MWh` 
+                      : `${producao} kWh`}
+                  </span>
+                </div>
                 <input 
                   required
-                  type="number"
-                  min="100"
+                  type="range"
+                  min="0"
+                  max="4000000"
+                  step="1000"
                   value={producao}
                   onChange={(e) => setProducao(Number(e.target.value))}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500"
+                  className="w-full accent-emerald-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                />
+                <input 
+                  type="number"
+                  min="0"
+                  max="4000000"
+                  value={producao}
+                  onChange={(e) => setProducao(Number(e.target.value))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 mt-2"
+                  placeholder="Ou digite o valor exato em kWh..."
                 />
               </div>
             </div>
