@@ -431,6 +431,47 @@ export async function listarProcessosAtivosSetor(setorId) {
 }
 
 /**
+ * Retorna os detalhes de um mundo específico.
+ * @param {string} mundoId - ID do mundo (ex: 'MUNDO-01')
+ */
+export async function obterDetalhesMundo(mundoId) {
+  try {
+    const { data, error } = await supabase.rpc('obter_detalhes_mundo', {
+      p_mundo_id: mundoId,
+    });
+
+    if (error) {
+      console.error('Erro na RPC obter_detalhes_mundo:', error.message);
+      return { success: false, message: error.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro inesperado:', err);
+    return { success: false, message: err.message };
+  }
+}
+
+/**
+ * Retorna a lista de todos os mundos disponíveis.
+ */
+export async function listarTodosMundos() {
+  try {
+    const { data, error } = await supabase.rpc('listar_todos_mundos');
+
+    if (error) {
+      console.error('Erro na RPC listar_todos_mundos:', error.message);
+      return { success: false, message: error.message, mundos: [] };
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Erro inesperado:', err);
+    return { success: false, message: err.message, mundos: [] };
+  }
+}
+
+/**
  * Interrompe ou pausa um processo de produção.
  * 
  * @param {string} processoId - ID do processo (ex: 'SAM_PROC_01')

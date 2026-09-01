@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Clock, CheckCircle } from 'lucide-react';
 import { pularTempoMundo } from '../request/request';
 
-export default function TimeSkipWidget({ baseId, onTimeSkipComplete }) {
+export default function TimeSkipWidget({ baseId, playerId, onTimeSkipComplete }) {
   const [isSkipping, setIsSkipping] = useState(false);
   const [skipResult, setSkipResult] = useState(null);
   const [requestedHours, setRequestedHours] = useState(0);
@@ -14,7 +14,8 @@ export default function TimeSkipWidget({ baseId, onTimeSkipComplete }) {
     setIsSkipping(true);
     setSkipResult(null);
     
-    const result = await pularTempoMundo('MUNDO-01', horas);
+    const mundoId = playerId === 'C1214-B8' ? 'Terra-C1214-B8' : 'MUNDO-01';
+    const result = await pularTempoMundo(mundoId, horas);
     
     if (result && result.success !== false) {
       setSkipResult(result);
@@ -47,18 +48,11 @@ export default function TimeSkipWidget({ baseId, onTimeSkipComplete }) {
           +1 Dia
         </button>
         <button 
-          onClick={() => handleSkip(3)}
-          disabled={isSkipping}
-          className="flex-1 flex items-center justify-center gap-1 bg-sky-700 hover:bg-sky-600 disabled:opacity-50 text-white font-bold py-1.5 px-2 rounded transition-colors shadow-lg"
-        >
-          +3 Dias
-        </button>
-        <button 
           onClick={() => handleSkip(7)}
           disabled={isSkipping}
           className="flex-1 flex items-center justify-center gap-1 bg-sky-800 hover:bg-sky-700 disabled:opacity-50 text-white font-bold py-1.5 px-2 rounded transition-colors shadow-lg"
         >
-          +7 Dias
+          +1 Semana
         </button>
       </div>
       
