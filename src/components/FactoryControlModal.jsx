@@ -1,28 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Pause, Activity, Cpu } from 'lucide-react';
-import { iniciarLinhaProducao, pausarLinhaProducao } from '../request/request';
+import { iniciarLinhaProducao, pausarLinhaProducao, listarTodasReceitas, listarMateriaisBase } from '../request/request';
 
-// Dummy list of recipes, you might fetch this from DB based on factory type
-const RECEITAS_MOCK = [
-  { id: 'rec-1', nome: 'Placas de Circuito', entrada: 'Silício', qtd_entrada: 4, saida: 'Circuitos', qtd_saida: 2 },
-  { id: 'rec-2', nome: 'Baterias', entrada: 'Lítio', qtd_entrada: 3, saida: 'Baterias', qtd_saida: 1 },
-  { id: 'rec-3', nome: 'Extração de Silício (Sem Entrada)', entrada: null, qtd_entrada: 0, saida: 'Silício', qtd_saida: 5, is_extracao: true }
-];
-
-export default function FactoryControlModal({ fabrica, onClose, onUpdate }) {
+export default function FactoryControlModal({ baseId, fabrica, onClose, onUpdate }) {
   const [isLooping, setIsLooping] = useState(fabrica.em_loop || false);
-  const [selectedReceitaId, setSelectedReceitaId] = useState(fabrica.receita_id || RECEITAS_MOCK[0].id);
-  const [isLoading, setIsLoading] = useState(false);
+  const [receitas, setReceitas] = useState([]);
+  const [selectedReceitaId, setSelectedReceitaId] = useState(fabrica.receita_id || '');
+  const [inventory, setInventory] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const selectedReceita = RECEITAS_MOCK.find(r => r.id === selectedReceitaId) || RECEITAS_MOCK[0];
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const [recData, invData] = await Promise.all([
+        listarTodasReceitas(),
+        listarMateriaisBase(baseId)
+      ]);
+      
+      const receitasLista = (recData && Array.isArray(recData.receitas)) ? recData.receitas : (Array.isArray(recData) ? recData : []);
+      setReceitas(receitasLista);
+      
+      const invLista = (invData && Array.isArray(invData.materiais)) ? invData.materiais : (Array.isArray(invData) ? invData : []);
+      setInventory(invLista);
+
+      if (!selectedReceitaId && receitasLista.length > 0) {
+        setSelectedReceitaId(receitasLista[0].id);
+      }
+      setIsLoading(false);
+    }
+    loadData();
+  }, [baseId, selectedReceitaId]);
+
+  const selectedReceita = receitas.find(r => r.id === selectedReceitaId);
+
+  const checkHasSufficientStock = (materialId, amountNeeded) => {
+    const invItem = inventory.find(i => i.material_id === materialId);
+    if (!invItem) return false;
+    return invItem.quantidade_total_ton >= amountNeeded;
+  };
+
+  const getMissingIngredients = () => {
+    if (!selectedReceita || !selectedReceita.insumos_entrada) return [];
+    return selectedReceita.insumos_entrada.filter(ing => !checkHasSufficientStock(ing.material_id, ing.quantidade_necessaria));
+  };
+
+  const missingIngredients = getMissingIngredients();
+  const canStart = missingIngredients.length === 0;
 
   const handleToggle = async () => {
+    if (isLoading) return;
     setIsLoading(true);
     try {
       if (isLooping) {
         await pausarLinhaProducao(fabrica.id);
         setIsLooping(false);
       } else {
+        if (!canStart) {
+          alert('Material insuficiente para iniciar a produção.');
+          setIsLoading(false);
+          return;
+        }
         await iniciarLinhaProducao(fabrica.id, selectedReceitaId);
         setIsLooping(true);
       }
@@ -67,10 +104,10 @@ export default function FactoryControlModal({ fabrica, onClose, onUpdate }) {
             <select 
               value={selectedReceitaId}
               onChange={(e) => setSelectedReceitaId(e.target.value)}
-              disabled={isLooping}
+              disabled={isLooping || isLoading}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500 disabled:opacity-50"
             >
-              {RECEITAS_MOCK.map(r => (
+              {receitas.map(r => (
                 <option key={r.id} value={r.id}>{r.nome}</option>
               ))}
             </select>
@@ -78,57 +115,73 @@ export default function FactoryControlModal({ fabrica, onClose, onUpdate }) {
           </div>
 
           {/* Indicador Visual de Consumo */}
-          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50 space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <Activity className="w-3 h-3" /> Balanço por Ciclo (1 Hora)
-            </h4>
-            
-            <div className="flex items-center gap-3 text-sm">
-              {!selectedReceita.is_extracao && (
-                <div className="flex-1 bg-red-950/30 border border-red-900/50 rounded p-2 text-center">
-                  <span className="block text-red-400 font-bold mb-1">-{selectedReceita.qtd_entrada} Ton</span>
-                  <span className="text-[10px] text-slate-400 uppercase">{selectedReceita.entrada}</span>
-                </div>
-              )}
+          {selectedReceita && (
+            <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50 space-y-3">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <Activity className="w-3 h-3" /> Balanço por Ciclo ({selectedReceita.tempo_ciclo_horas} Hora(s))
+              </h4>
               
-              {!selectedReceita.is_extracao && (
-                <div className="text-slate-600 font-bold">➔</div>
-              )}
+              <div className="flex flex-col gap-3 text-sm">
+                {/* Ingredientes */}
+                {selectedReceita.insumos_entrada && selectedReceita.insumos_entrada.length > 0 ? (
+                  selectedReceita.insumos_entrada.map(ing => {
+                    const hasStock = checkHasSufficientStock(ing.material_id, ing.quantidade_necessaria);
+                    return (
+                      <div key={ing.material_id} className={`flex-1 bg-slate-950/30 border ${hasStock ? 'border-red-900/50' : 'border-red-500 bg-red-950/50'} rounded p-2 text-center`}>
+                        <span className={`block ${hasStock ? 'text-red-400' : 'text-red-500'} font-bold mb-1`}>
+                          -{ing.quantidade_necessaria} Ton
+                        </span>
+                        <span className="text-[10px] text-slate-400 uppercase">
+                          {ing.nome_material || ing.material_id}
+                          {!hasStock && <span className="text-red-500 ml-1 font-bold">(Falta material na base)</span>}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center text-xs text-slate-500 italic">Sem insumos necessários</div>
+                )}
+                
+                <div className="text-slate-600 font-bold self-center">➔</div>
 
-              <div className="flex-1 bg-emerald-950/30 border border-emerald-900/50 rounded p-2 text-center">
-                <span className="block text-emerald-400 font-bold mb-1">+{selectedReceita.qtd_saida} Ton</span>
-                <span className="text-[10px] text-slate-400 uppercase">{selectedReceita.saida}</span>
+                <div className="flex-1 bg-emerald-950/30 border border-emerald-900/50 rounded p-2 text-center">
+                  <span className="block text-emerald-400 font-bold mb-1">
+                    +{selectedReceita.produto_saida?.quantidade_saida || 0} Ton
+                  </span>
+                  <span className="text-[10px] text-slate-400 uppercase">
+                    {selectedReceita.produto_saida?.nome_material || 'Material Produzido'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center text-xs pt-3 border-t border-slate-800">
+                <span className="text-slate-400">Energia Necessária:</span>
+                <span className="text-yellow-400 font-bold">{selectedReceita.energia_requerida_kwh} kWh</span>
               </div>
             </div>
-            {selectedReceita.is_extracao && (
-              <p className="text-[10px] text-slate-500 text-center italic mt-2">
-                Processo de extração não consome materiais.
-              </p>
-            )}
-          </div>
-        </div>
+          )}
 
-        {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-700/50 bg-slate-800/80">
+          {/* Botão de Ação */}
           <button 
             onClick={handleToggle}
-            disabled={isLoading}
-            className={`w-full font-bold py-2.5 px-4 rounded-lg transition-all shadow-lg flex items-center justify-center gap-2 ${
-              isLooping 
-                ? "bg-red-500 hover:bg-red-400 text-white shadow-red-500/20" 
-                : "bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-emerald-500/20"
-            } disabled:opacity-50`}
+            disabled={isLoading || (!isLooping && !canStart)}
+            className={`w-full py-4 rounded-lg font-bold text-lg uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+              ${(!isLooping && !canStart) ? 'bg-red-600/50 text-red-300 border border-red-500 cursor-not-allowed' : 
+                isLooping 
+                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20' 
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
+              }
+            `}
           >
             {isLoading ? (
-              <span className="animate-pulse">Processando...</span>
+              <span className="animate-pulse">Aguarde...</span>
+            ) : (!isLooping && !canStart) ? (
+              <span>Falta Ingredientes</span>
             ) : isLooping ? (
-              <>
-                <Pause className="w-5 h-5" /> Pausar Linha
-              </>
+              <><Pause className="w-5 h-5 fill-current" /> Pausar Produção</>
             ) : (
-              <>
-                <Play className="w-5 h-5" /> Iniciar Produção Contínua
-              </>
+              <><Play className="w-5 h-5 fill-current" /> Iniciar Produção</>
             )}
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Zap, ZapOff, Box, Layers, Factory as FactoryIcon, Settings, Plus, ArrowRight, Database, Factory, Activity, Trash2, ShieldAlert, Truck, Play } from 'lucide-react';
+import { X, Zap, ZapOff, Box, Layers, Factory as FactoryIcon, Settings, Plus, ArrowRight, Database, Factory, Activity, Trash2, ShieldAlert, Truck, Play, Pause } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FactoryControlModal from './FactoryControlModal';
@@ -7,19 +7,37 @@ import AddInstallationModal from './AddInstallationModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TransferStockModal from './TransferStockModal';
 import { deletarFabrica, deletarArmazenamento, deletarEnergia, deletarSetor } from '../services/deleteService';
-import { reativarProcesso } from '../request/request';
+import { reativarProcesso, definirProvedorEnergia, updateSetorStatus } from '../request/request';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export default function DetailsPanel({ node, providerNode, onClose, onToggleTrouble, nodes, edges }) {
+export default function DetailsPanel({ baseId, node, providerNode, onClose, onToggleTrouble, nodes, edges }) {
   const [expandedSilos, setExpandedSilos] = useState({});
   const [controllingFactory, setControllingFactory] = useState(null);
   const [showAddInstallation, setShowAddInstallation] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(null);
   const [transferState, setTransferState] = useState(null); // { armazem, item }
+  const [errorDialog, setErrorDialog] = useState(null);
+  const [processosSetor, setProcessosSetor] = useState([]);
   const siloRefs = useRef({});
+
+  React.useEffect(() => {
+    if (baseId && node?.id) {
+      import('../request/request').then(({ listarTodosProcessosBase }) => {
+        listarTodosProcessosBase(baseId).then(res => {
+          if (res && res.processos) {
+            setProcessosSetor(res.processos.filter(p => p.setor?.id === node.id));
+          } else if (Array.isArray(res)) {
+            setProcessosSetor(res.filter(p => p.setor?.id === node.id));
+          } else {
+            setProcessosSetor([]);
+          }
+        });
+      });
+    }
+  }, [baseId, node?.id]);
 
   const toggleSilo = (siloId) => {
     const willExpand = !expandedSilos[siloId];
@@ -64,6 +82,22 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
       message: "ATENÇÃO! Tem certeza que deseja destruir o setor inteiro? Isso apagará a estrutura, fábricas, silos e geradores presentes nele de forma IRREVERSÍVEL.",
       action: async () => await deletarSetor(id)
     });
+  };
+
+  const handleDefinirProvedor = async (e) => {
+    const selectedProviderId = e.target.value === "" ? null : e.target.value;
+    const result = await definirProvedorEnergia(node?.id, selectedProviderId);
+    
+    if (result && result.success !== false) {
+      if (selectedProviderId) {
+        await updateSetorStatus(node.id, 'OPERANDO');
+      } else {
+        await updateSetorStatus(node.id, 'SEM_ENERGIA');
+      }
+      window.location.reload();
+    } else {
+      alert("Erro ao alterar provedor: " + (result?.message || "Erro desconhecido"));
+    }
   };
 
   if (!node) return null;
@@ -142,12 +176,32 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
         )}
 
         {/* Distritos de Energia ou Energia Recebida */}
-        {(data.distritos_energia?.length > 0 || (data.setor_energia_provedor_id && data.setor_energia_provedor_id !== data.id)) && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
-            </h3>
-            <div className="space-y-3">
+        <div className="mb-6">
+          <h3 className="text-xs uppercase tracking-wider text-emerald-400 font-bold mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Geração e Fornecimento de Energia
+          </h3>
+          <div className="space-y-3">
+            
+            {/* Selector de Provedor (Apenas para setores sem geração própria) */}
+            {!(data.distritos_energia?.length > 0) && (
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Conectar a Provedor</label>
+                <select 
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 p-2 rounded text-sm outline-none focus:border-sky-500"
+                  value={data.setor_energia_provedor_id || ""}
+                  onChange={handleDefinirProvedor}
+                >
+                  <option value="">Sem Energia (Inativo)</option>
+                  {nodes
+                    .filter(n => !n.data.isEmpty && n.data.distritos_energia?.length > 0)
+                    .map(n => (
+                      <option key={n.id} value={n.id}>
+                        {n.data.nome} (Livre: {Number(n.data.restante_kwh_hora || 0).toFixed(0)} kWh)
+                      </option>
+                  ))}
+                </select>
+              </div>
+            )}
               
               {/* Barra de Energia Restante (Se o Setor for Provedor) */}
               {data.restante_kwh_hora != null && Number(data.producao_kwh_hora) > 0 && (
@@ -237,15 +291,14 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
               ))}
             </div>
           </div>
-        )}
 
         {/* Fábricas e Processos */}
         {data.fabricas && data.fabricas.length > 0 && (
           <div>
             <h3 className="text-xs uppercase tracking-wider text-purple-400 font-bold mb-3 flex items-center gap-2">
-              <Factory className="w-4 h-4" /> Manufatura e Refino
+              <Factory className="w-4 h-4" /> Complexo Industrial
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {data.fabricas.map((fab) => (
                 <div key={fab.id} className="bg-slate-800/50 p-3 rounded-lg border border-purple-900/50 relative group">
                   <button 
@@ -261,45 +314,75 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
                   </div>
                   <div className="text-xs text-slate-400 mb-3">Energia Requerida: {fab.energia_requerida_kwh} kWh</div>
                   
-                  {fab.processos_ativos && fab.processos_ativos.length > 0 ? (
+                  {processosSetor.filter(p => p.fabrica?.id === fab.id).length > 0 ? (
                     <div className="space-y-2">
                       <span className="text-xs text-slate-500 uppercase">Processos Ativos</span>
-                      {fab.processos_ativos.map((proc) => (
-                        <div key={proc.id} className="bg-slate-900/50 p-2 rounded border border-slate-700/50">
-                          <div className="flex items-center gap-2 text-xs">
-                            <div className="flex-1 text-red-300 text-right truncate" title={proc.material_entrada?.nome || 'Nenhum'}>
-                              {proc.material_entrada ? `- ${proc.material_entrada.quantidade} ${proc.material_entrada.nome}` : '-'}
-                            </div>
-                            <ArrowRight className="w-3 h-3 text-slate-500 shrink-0" />
-                            <div className="flex-1 text-emerald-300 truncate" title={proc.material_saida?.nome || 'Nenhum'}>
-                              {proc.material_saida ? `+ ${proc.material_saida.quantidade} ${proc.material_saida.nome}` : '-'}
-                            </div>
-                          </div>
-                          <div className="mt-1 flex items-center justify-between text-[10px]">
-                            <span className={cn(
-                              "text-slate-500",
-                              proc.status_processo !== 'EM_ANDAMENTO' && "text-red-400 font-bold"
-                            )}>
-                              Status: {proc.status_processo}
+                      {processosSetor.filter(p => p.fabrica?.id === fab.id).map((proc) => (
+                        <div key={proc.processo_id} className="bg-slate-900/50 p-2 rounded border border-slate-700/50">
+                          <div className="flex justify-between text-xs font-bold text-slate-300 mb-1">
+                            <span className="truncate pr-2 uppercase">Produção: {proc.produto_saida?.nome_material || 'Material'}</span>
+                            <span className={proc.status_processo === 'EM_ANDAMENTO' ? 'text-emerald-400' : 'text-amber-400'}>
+                              {proc.status_processo}
                             </span>
-                            {proc.status_processo !== 'EM_ANDAMENTO' && (
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-[10px] text-slate-500 mb-2 font-mono">
+                            {proc.insumo_entrada && (
+                              <span className="text-red-400">-{proc.insumo_entrada.quantidade_entrada} {proc.insumo_entrada.nome_material}</span>
+                            )}
+                            {(!proc.insumo_entrada) && <span>Extração direta</span>}
+                            <span className="text-emerald-400">+{proc.produto_saida?.quantidade_saida || 0} {proc.produto_saida?.nome_material}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center border-t border-slate-800 pt-2 text-[9px] text-slate-500">
+                            <span>Início: {new Date(proc.tempo?.inicio).toLocaleTimeString()}</span>
+                            <span>Loop: {proc.em_loop ? 'Ativo' : 'Não'}</span>
+                          </div>
+
+                          <div className="flex justify-end gap-2 mt-2">
+                            {proc.status_processo === 'EM_ANDAMENTO' && (
                               <button 
                                 onClick={async (e) => {
-                                  e.stopPropagation();
                                   const btn = e.currentTarget;
                                   btn.disabled = true;
-                                  const res = await reativarProcesso(proc.id, true);
-                                  if (res && res.success !== false) {
-                                    window.location.reload();
-                                  } else {
-                                    alert("Erro ao reativar: " + (res?.message || "Erro desconhecido"));
-                                    btn.disabled = false;
-                                  }
+                                  import('../request/request').then(({ interromperProcesso }) => {
+                                    interromperProcesso(proc.processo_id, 'PAUSADO').then(res => {
+                                      if (res && res.success !== false) {
+                                        window.location.reload();
+                                      } else {
+                                        setErrorDialog("Erro ao interromper: " + (res?.message || "Erro desconhecido"));
+                                        btn.disabled = false;
+                                      }
+                                    });
+                                  });
+                                }}
+                                className="flex items-center gap-1 bg-amber-600/30 hover:bg-amber-600/50 text-amber-400 px-2 py-0.5 rounded transition-colors disabled:opacity-50"
+                                title="Pausar este processo"
+                              >
+                                <Pause className="w-3 h-3" /> Pausar
+                              </button>
+                            )}
+
+                            {(proc.status_processo !== 'EM_ANDAMENTO' && proc.status_processo !== 'CONCLUIDO') && (
+                              <button 
+                                onClick={async (e) => {
+                                  const btn = e.currentTarget;
+                                  btn.disabled = true;
+                                  import('../request/request').then(({ reativarProcesso }) => {
+                                    reativarProcesso(proc.processo_id, true).then(res => {
+                                      if (res && res.success !== false) {
+                                        window.location.reload();
+                                      } else {
+                                        setErrorDialog("Erro ao reativar: " + (res?.message || "Erro desconhecido"));
+                                        btn.disabled = false;
+                                      }
+                                    });
+                                  });
                                 }}
                                 className="flex items-center gap-1 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-400 px-2 py-0.5 rounded transition-colors disabled:opacity-50"
-                                title="Forçar reativação do processo"
+                                title={proc.status_processo === 'PAUSADO' ? 'Retomar processo pausado' : 'Forçar reativação do processo'}
                               >
-                                <Play className="w-3 h-3" /> Reativar
+                                <Play className="w-3 h-3" /> {proc.status_processo === 'PAUSADO' ? 'Retomar' : 'Reativar'}
                               </button>
                             )}
                           </div>
@@ -444,10 +527,12 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
       </div>
       {controllingFactory && (
         <FactoryControlModal 
+          baseId={baseId}
           fabrica={controllingFactory} 
           onClose={() => setControllingFactory(null)}
           onUpdate={() => {
             setControllingFactory(null);
+            window.location.reload();
           }}
         />
       )}
@@ -478,6 +563,34 @@ export default function DetailsPanel({ node, providerNode, onClose, onToggleTrou
           nodes={nodes}
           edges={edges}
         />
+      )}
+
+      {errorDialog && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[99999] p-4">
+          <div className="bg-slate-900 border-2 border-red-900/50 rounded-lg max-w-sm w-full p-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-950 rounded-lg text-red-500">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-100 font-mono tracking-tight uppercase">Falha na Operação</h2>
+            </div>
+            
+            <p className="text-sm text-slate-300 mb-6 font-mono leading-relaxed bg-slate-950/50 p-3 rounded border border-slate-800">
+              {errorDialog}
+            </p>
+            
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setErrorDialog(null)}
+                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded font-bold uppercase text-sm transition-colors border border-slate-700 flex items-center gap-2"
+              >
+                <X className="w-4 h-4" /> Fechar Alerta
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

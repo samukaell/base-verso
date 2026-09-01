@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, MapPin, Shield, Zap } from 'lucide-react';
-import { criarNovoSetor, listarEstruturasBase } from '../request/request';
+import { criarNovoSetor, listarEstruturasBase, updateSetorStatus } from '../request/request';
+import { supabase } from '../request/supabaseClient';
 
 export default function CreateSectorModal({ baseId, onClose, defaultX = 0, defaultY = 0 }) {
   const [formData, setFormData] = useState({
@@ -64,6 +65,29 @@ export default function CreateSectorModal({ baseId, onClose, defaultX = 0, defau
       setErrorMsg(result.message);
       setIsSubmitting(false);
     } else {
+      // Se não tem provedor de energia, o setor DEVE ser criado como INATIVO
+      if (!payload.provedorEnergiaId) {
+        try {
+          // Busca o ID do setor recém-criado pelo nome
+          const { data: newlyCreated, error: queryError } = await supabase
+            .from('setores')
+            .select('id')
+            .eq('base_id', baseId)
+            .eq('nome', payload.nome)
+            .limit(1);
+            
+          if (queryError) {
+             console.error("Erro na busca do setor:", queryError);
+          }
+
+          if (newlyCreated && newlyCreated.length > 0) {
+            await updateSetorStatus(newlyCreated[0].id, 'SEM_ENERGIA');
+          }
+        } catch (e) {
+          console.error("Erro ao forçar INATIVO no novo setor:", e);
+        }
+      }
+      
       // Sucesso! Recarregar a página para buscar todos os setores novamente
       window.location.reload();
     }

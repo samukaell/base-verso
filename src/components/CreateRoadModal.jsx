@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ArrowRightLeft, Waypoints } from 'lucide-react';
-import { criarEstrada } from '../request/request';
+import { criarEstrada, updateSetorStatus } from '../request/request';
 
 export default function CreateRoadModal({ connection, nodes, onClose }) {
   const [nome, setNome] = useState('');
@@ -29,6 +29,23 @@ export default function CreateRoadModal({ connection, nodes, onClose }) {
       setErrorMsg(result.message);
       setIsSubmitting(false);
     } else {
+      // Restore energy if connecting an inactive sector to an operating one
+      const isSourceInactive = sourceNode?.data?.status === 'SEM_ENERGIA' || sourceNode?.data?.status === 'INTERDITADO';
+      const isTargetInactive = targetNode?.data?.status === 'SEM_ENERGIA' || targetNode?.data?.status === 'INTERDITADO';
+      
+      const isSourceOperating = sourceNode?.data?.status === 'OPERANDO';
+      const isTargetOperating = targetNode?.data?.status === 'OPERANDO';
+
+      try {
+        if (isSourceInactive && isTargetOperating) {
+          await updateSetorStatus(sourceNode.id, 'OPERANDO');
+        } else if (isTargetInactive && isSourceOperating) {
+          await updateSetorStatus(targetNode.id, 'OPERANDO');
+        }
+      } catch (e) {
+        console.error("Erro ao reativar o setor após conectar estrada:", e);
+      }
+
       window.location.reload();
     }
   };
