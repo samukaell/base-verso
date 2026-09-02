@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Zap, ZapOff, Box, Layers, Factory as FactoryIcon, Settings, Plus, ArrowRight, Database, Factory, Activity, Trash2, ShieldAlert, Truck, Play, Pause } from 'lucide-react';
+import { X, Zap, Heart, Shield, Target, ZapOff, Box, Layers, Factory as FactoryIcon, Settings, Plus, ArrowRight, Database, Factory, Activity, Trash2, ShieldAlert, Truck, Play, Pause } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import FactoryControlModal from './FactoryControlModal';
@@ -127,13 +127,15 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button 
+          {!isFicha && (
+<button 
             onClick={() => setShowAddInstallation(true)}
             className="text-amber-500 hover:text-amber-300 transition-colors p-1"
             title="Adicionar Instalação (Fábrica, Armazém, Energia)"
           >
             <Plus className="w-5 h-5" />
           </button>
+)}
           <button 
             onClick={onClose}
             className="text-slate-500 hover:text-slate-300 transition-colors p-1"
@@ -150,6 +152,24 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
             <div className="bg-black/40 border border-[#f04842]/30 rounded-lg p-3">
               <h4 className="text-xs uppercase font-bold text-[#f04842] mb-1">Descrição</h4>
               <p className="text-xs text-slate-300">{data.descricao || "Unidade de defesa sem descrição disponível."}</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-red-950/40 border border-red-500/30 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+                <Heart className="w-5 h-5 text-red-500 mb-1" />
+                <span className="text-[10px] uppercase font-bold text-red-400">Vida</span>
+                <span className="text-lg font-bold text-slate-100">{data.atributos?.resistencia ? data.atributos.resistencia * 5 : 1}</span>
+              </div>
+              <div className="bg-sky-950/40 border border-sky-500/30 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+                <Shield className="w-5 h-5 text-sky-500 mb-1" />
+                <span className="text-[10px] uppercase font-bold text-sky-400">CA</span>
+                <span className="text-lg font-bold text-slate-100">{(data.atributos?.armadura || 0) + (data.atributos?.habilidade || 0)}</span>
+              </div>
+              <div className="bg-amber-950/40 border border-amber-500/30 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+                <Target className="w-5 h-5 text-amber-500 mb-1" />
+                <span className="text-[10px] uppercase font-bold text-amber-400">Ataque</span>
+                <span className="text-lg font-bold text-slate-100">{(data.atributos?.poder || 0) + (data.atributos?.habilidade || 0)}</span>
+              </div>
             </div>
 
             <div className="bg-black/40 border border-[#f04842]/30 rounded-lg p-3">
@@ -235,6 +255,7 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
 
         {!isFicha && (
           <>
+
 
 
         {/* Player / Base Info */}
@@ -597,6 +618,7 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
         )}
 
       
+          
           </>
         )}
 </div>
