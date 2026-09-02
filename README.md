@@ -112,16 +112,6 @@ export async function atualizarStatusFicha(fichaId, novoStatus) {
 }
 ```
 
----
-
-## ⚡ Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com as credenciais do seu projeto Supabase:
-
-```env
-VITE_SUPABASE_URL=[https://seu-projeto.supabase.co](https://seu-projeto.supabase.co)
-VITE_SUPABASE_ANON_KEY=sua-anon-key-publica
-```
 
 ---
 
