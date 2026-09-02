@@ -103,22 +103,25 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
   if (!node) return null;
   const { data } = node;
 
-  const hasTrouble = data.status !== 'OPERANDO' && data.status !== 'Sem energia';
+  const isFicha = node.type === 'ficha';
+  const hasTrouble = isFicha 
+    ? (data.status !== 'ATIVO' && data.status !== 'OPERANDO') 
+    : (data.status !== 'OPERANDO' && data.status !== 'Sem energia' && data.status !== 'SEM_ENERGIA');
 
   return (
     <div className="absolute top-4 right-4 bottom-4 w-[400px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 overflow-hidden">
       {/* Header */}
       <div className={cn(
         "p-4 flex items-start justify-between border-b border-slate-700/50",
-        hasTrouble ? "bg-red-500/20" : "bg-sky-900/20"
+        hasTrouble ? "bg-red-500/20" : (isFicha ? "bg-[#f04842]/20" : "bg-sky-900/20")
       )}>
         <div className="flex gap-3">
           <div className="mt-1">
-            <Activity className="w-5 h-5 text-sky-400" />
+            <Activity className={cn("w-5 h-5", isFicha ? "text-[#f04842]" : "text-sky-400")} />
           </div>
           <div>
             <h2 className="font-bold text-lg text-slate-100 leading-tight">{data.nome}</h2>
-            <span className={cn("text-xs font-bold", hasTrouble ? "text-red-400" : "text-emerald-400")}>
+            <span className={cn("text-xs font-bold", hasTrouble ? "text-red-400" : (isFicha ? "text-[#f04842]" : "text-emerald-400"))}>
               Status: {data.status}
             </span>
           </div>
@@ -183,7 +186,7 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
           <div className="space-y-3">
             
             {/* Selector de Provedor (Apenas para setores sem geração própria) */}
-            {!(data.distritos_energia?.length > 0) && (
+            {!isFicha && !(data.distritos_energia?.length > 0) && (
               <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Conectar a Provedor</label>
                 <select 
@@ -515,7 +518,7 @@ export default function DetailsPanel({ baseId, node, providerNode, onClose, onTo
               : "bg-red-500 hover:bg-red-400 text-white shadow-red-500/20"
           )}
         >
-          {hasTrouble ? "Restaurar Operações" : "Interditar Setor"}
+          {hasTrouble ? (isFicha ? "Ativar Defesa" : "Restaurar Operações") : (isFicha ? "Desativar Defesa" : "Interditar Setor")}
         </button>
 
         <button 

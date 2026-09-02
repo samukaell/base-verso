@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useReactFlow } from '@xyflow/react';
 
-export default function CursorTracker() {
+export default function CursorTracker({ hoveredNodeId }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [flowPos, setFlowPos] = useState({ x: 0, y: 0 });
   const { screenToFlowPosition } = useReactFlow();
@@ -46,6 +46,13 @@ export default function CursorTracker() {
         <div className="absolute right-[-8px] top-0 transform translate-x-full text-[#f4ebd8] font-bold text-xs whitespace-nowrap">
           {flowPos.y.toFixed(3)}
         </div>
+
+        {/* Hovered Node ID */}
+        {hoveredNodeId && (
+          <div className="absolute right-[-8px] bottom-0 transform translate-x-full text-[#f4ebd8] font-bold text-xs whitespace-nowrap uppercase">
+            {hoveredNodeId}
+          </div>
+        )}
       </div>
     </div>
   );

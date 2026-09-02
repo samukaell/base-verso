@@ -1,7 +1,7 @@
-import { supabase } from "./supabaseClient";
+﻿import { supabase } from "./supabaseClient";
 
 export async function fetchPlayerData(playerId = "A26-I99") {
-  const { data, error } = await supabase.rpc("get_player_full_data", {
+  const { data, error } = await supabase.rpc("obter_dados_completos_jogador", {
     p_player_id: playerId,
   });
 
@@ -37,7 +37,7 @@ export async function iniciarLinhaProducao(fabricaId, receitaId) {
     .eq("id", fabricaId)
     .select();
 
-  if (error) console.error("Erro ao iniciar produção:", error);
+  if (error) console.error("Erro ao iniciar produÃ§Ã£o:", error);
   return data;
 }
 
@@ -51,7 +51,7 @@ export async function pausarLinhaProducao(fabricaId) {
     .eq("id", fabricaId)
     .select();
 
-  if (error) console.error("Erro ao pausar produção:", error);
+  if (error) console.error("Erro ao pausar produÃ§Ã£o:", error);
   return data;
 }
 
@@ -79,7 +79,7 @@ export async function pularTempoMundo(mundoId = "MUNDO-01", horas = 24) {
     });
 
     if (error) {
-      console.error("Erro ao avançar tempo do mundo:", error.message);
+      console.error("Erro ao avanÃ§ar tempo do mundo:", error.message);
       return { success: false, error: error.message };
     }
 
@@ -172,11 +172,11 @@ export async function adicionarInstalacoesSetor({
   energia = null,
 }) {
   try {
-    // 1. Normaliza o payload da fábrica para o formato exato esperado pela procedure
+    // 1. Normaliza o payload da fÃ¡brica para o formato exato esperado pela procedure
     let payloadFabrica = null;
     if (fabrica) {
       payloadFabrica = {
-        nome: fabrica.nome || fabrica.nome_fabrica || 'Nova Fábrica',
+        nome: fabrica.nome || fabrica.nome_fabrica || 'Nova FÃ¡brica',
         // Garante 'BASE' ou 'TECNOLOGIA' (o banco rejeita MANUFATURA)
         tipo: (fabrica.tipo || fabrica.tipo_fabrica || 'BASE').toUpperCase(),
         is_extracao: Boolean(fabrica.is_extracao),
@@ -278,7 +278,7 @@ export async function reativarProcesso(processoId, forcarLoop = true) {
 
 /**
  * Define ou altera o setor provedor de energia de um setor.
- * @param {string} setorClienteId - ID do setor que receberá a energia (ex: 'SAM_SET_02')
+ * @param {string} setorClienteId - ID do setor que receberÃ¡ a energia (ex: 'SAM_SET_02')
  * @param {string|null} [setorProvedorId=null] - ID do setor com usina geradora, ou null para desconectar
  */
 export async function definirProvedorEnergia(setorClienteId, setorProvedorId = null) {
@@ -301,13 +301,13 @@ export async function definirProvedorEnergia(setorClienteId, setorProvedorId = n
 }
 
 /**
- * Cadastra um novo material validando nome único e categoria.
+ * Cadastra um novo material validando nome Ãºnico e categoria.
  * 
  * @param {Object} params
  * @param {string} params.nome - Nome do material (ex: 'Liga de Cobalto')
  * @param {'MINERIO_BRUTO' | 'REFINADO' | 'COMPONENTE' | 'ENERGIA' | 'TECNOLOGIA_3DET'} params.categoria - Categoria do material
  * @param {1 | 2 | 3} params.nivelTier - Tier do material (1, 2 ou 3)
- * @param {string} [params.descricao] - Descrição do material (opcional)
+ * @param {string} [params.descricao] - DescriÃ§Ã£o do material (opcional)
  * @param {string} [params.idCustomizado] - ID customizado ex: 'MAT_COBALTO' (opcional)
  */
 export async function criarNovoMaterial({
@@ -385,7 +385,7 @@ export async function cadastrarReceita({
 }
 
 /**
- * Retorna todos os materiais cadastrados no catálogo global do jogo.
+ * Retorna todos os materiais cadastrados no catÃ¡logo global do jogo.
  */
 export async function listarTodosMateriais() {
   try {
@@ -445,7 +445,7 @@ export async function listarProcessosAtivosSetor(setorId) {
 }
 
 /**
- * Retorna os detalhes de um mundo específico.
+ * Retorna os detalhes de um mundo especÃ­fico.
  * @param {string} mundoId - ID do mundo (ex: 'MUNDO-01')
  */
 export async function obterDetalhesMundo(mundoId) {
@@ -467,7 +467,7 @@ export async function obterDetalhesMundo(mundoId) {
 }
 
 /**
- * Retorna a lista de todos os mundos disponíveis.
+ * Retorna a lista de todos os mundos disponÃ­veis.
  */
 export async function listarTodosMundos() {
   try {
@@ -486,7 +486,7 @@ export async function listarTodosMundos() {
 }
 
 /**
- * Interrompe ou pausa um processo de produção.
+ * Interrompe ou pausa um processo de produÃ§Ã£o.
  * 
  * @param {string} processoId - ID do processo (ex: 'SAM_PROC_01')
  * @param {'PAUSADO' | 'INTERROMPIDO' | 'INTERROMPIDO_SEM_INSUMO' | 'INTERROMPIDO_ARMAZEM_CHEIO'} [novoStatus='PAUSADO']
@@ -531,3 +531,9 @@ export async function listarTodosProcessosBase(baseId) {
     return { success: false, message: err.message, processos: [] };
   }
 }
+
+
+
+
+
+export async function atualizarStatusFicha(fichaId, novoStatus) { const { data, error } = await supabase.rpc('atualizar_status_ficha', { p_ficha_id: fichaId, p_novo_status: novoStatus }); if (error) console.error(error); return data; }

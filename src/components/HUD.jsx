@@ -49,9 +49,26 @@ export default function HUD({ baseId, onTimeSkipComplete, onLogout, playerId, pl
     (nodes || []).forEach(n => {
       if (n.data?.isEmpty) return;
       
+      // Sum production (usually only sectors)
       const prod = Number(n.data.producao_kwh_hora) || 0;
       capacity += prod;
       
+      // If it's a Ficha, it consumes energy directly
+      if (n.type === 'ficha') {
+        const fichaAtiva = n.data.status === 'OPERANDO' || n.data.status === 'ATIVO';
+        const req = Number(n.data.energia_requerida_kwh || 0);
+        if (fichaAtiva && req > 0) {
+          consumed += req;
+          consList.push({
+            id: n.id,
+            nome_fabrica: n.data.nome || 'Defesa',
+            setor: 'Base Central (Ficha)',
+            req
+          });
+        }
+      }
+
+      // If it's a sector, check its fabricas
       if (n.data?.fabricas && Array.isArray(n.data.fabricas)) {
         n.data.fabricas.forEach(fab => {
           const req = Number(fab.energia_requerida_kwh || fab.energia_requerida || 0);

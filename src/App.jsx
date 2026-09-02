@@ -11,12 +11,18 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import SectorNode from './components/SectorNode';
+import FichaNode from './components/FichaNode';
 import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 import CreateRoadModal from './components/CreateRoadModal';
 import CreateSectorModal from './components/CreateSectorModal';
 import CursorTracker from './components/CursorTracker';
-import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase } from './request/request';
+import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase, atualizarStatusFicha } from './request/request';
+
+const nodeTypes = {
+  sector: SectorNode,
+  ficha: FichaNode
+};
 
 function FlowMap({ playerId, onLogout }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -29,7 +35,16 @@ function FlowMap({ playerId, onLogout }) {
   const [selectedBaseIndex, setSelectedBaseIndex] = useState(0);
   const [pendingConnection, setPendingConnection] = useState(null);
   const [pendingNewSector, setPendingNewSector] = useState(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
+
+  const onNodeMouseEnter = useCallback((event, node) => {
+    setHoveredNodeId(node.id);
+  }, []);
+
+  const onNodeMouseLeave = useCallback(() => {
+    setHoveredNodeId(null);
+  }, []);
 
   const onEdgeMouseEnter = useCallback((event, edge) => {
     setHoveredEdgeId(edge.id);
@@ -43,6 +58,19 @@ function FlowMap({ playerId, onLogout }) {
     setNodes((nds) => {
       const targetNode = nds.find((n) => n.id === nodeId);
       if (!targetNode) return nds;
+
+      if (targetNode.type === 'ficha') {
+        const newStatus = targetNode.data.status === 'ATIVO' || targetNode.data.status === 'OPERANDO' ? 'INATIVO' : 'ATIVO';
+        
+        atualizarStatusFicha(nodeId, newStatus);
+
+        return nds.map((n) => {
+          if (n.id === nodeId) {
+            return { ...n, data: { ...n.data, status: newStatus } };
+          }
+          return n;
+        });
+      }
 
       const isSelfPowered = targetNode.data.distritos_energia && targetNode.data.distritos_energia.length > 0;
       const isSelfProvided = targetNode.data.setor_energia_provedor_id === targetNode.id;
@@ -220,12 +248,18 @@ function FlowMap({ playerId, onLogout }) {
         const usedLayoutIndices = new Set();
         const occupiedLayouts = [];
 
-        // 1. Process all existing sectors
-        setores.forEach((setor) => {
+        // Combine sectors and fichas for node rendering
+        const combinedNodesData = [
+          ...setores.map(s => ({ ...s, _nodeType: 'sector' })),
+          ...(baseToLoad.fichas || []).map(f => ({ ...f, _nodeType: 'ficha' }))
+        ];
+
+        // 1. Process all existing structures (sectors and fichas)
+        combinedNodesData.forEach((nodeData) => {
           let layoutIndex = layoutMap.findIndex(l => {
-             if (!setor.posicao) return false;
-             const px = Math.round(setor.posicao.x);
-             const py = Math.round(setor.posicao.y);
+             if (!nodeData.posicao) return false;
+             const px = Math.round(nodeData.posicao.x);
+             const py = Math.round(nodeData.posicao.y);
              return (l.x === px && l.y === py) || (l.oldX === px && l.oldY === py);
           });
           
@@ -237,18 +271,19 @@ function FlowMap({ playerId, onLogout }) {
             usedLayoutIndices.add(layoutIndex);
             const layout = layoutMap[layoutIndex];
             occupiedLayouts.push(layout);
+
             initializedNodes.push({
-              id: setor.id,
-              type: 'sector',
+              id: nodeData.id,
+              type: nodeData._nodeType,
               position: { x: layout.x, y: layout.y },
-              zIndex: 1000 + Math.round(layout.x + layout.y), // Higher z-index for bottom-right nodes to simulate isometric depth
+              zIndex: 1000 + Math.round(layout.x + layout.y),
               data: {
-                ...setor,
+                ...nodeData,
                 width: layout.width,
                 height: layout.height,
-                playerInfo: setor.id.includes('SET_CENTRO') ? playerInfo : null,
-                processos_ativos_count: globalProcessos.filter(p => p.setor?.id === setor.id && p.status_processo !== 'CONCLUIDO').length,
-                onToggleTrouble: () => handleToggleTrouble(setor.id),
+                playerInfo: nodeData.id.includes('SET_CENTRO') ? playerInfo : null,
+                processos_ativos_count: globalProcessos.filter(p => p.setor?.id === nodeData.id && p.status_processo !== 'CONCLUIDO').length,
+                onToggleTrouble: () => handleToggleTrouble(nodeData.id),
                 isEmpty: false
               }
             });
@@ -391,8 +426,6 @@ function FlowMap({ playerId, onLogout }) {
     []
   );
 
-  const nodeTypes = useMemo(() => ({ sector: SectorNode }), []);
-
   const currentEdges = useMemo(() => {
     return edges.map(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
@@ -457,7 +490,7 @@ function FlowMap({ playerId, onLogout }) {
         edges={edges}
       />
 
-      <CursorTracker />
+      <CursorTracker hoveredNodeId={hoveredNodeId} />
 
       <ReactFlow
         nodes={nodes}
@@ -468,6 +501,8 @@ function FlowMap({ playerId, onLogout }) {
         onEdgesDelete={onEdgesDelete}
         onNodesDelete={onNodesDelete}
         onNodeClick={onNodeClick}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         onPaneClick={onPaneClick}
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
