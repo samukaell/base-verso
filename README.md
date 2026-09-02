@@ -13,6 +13,11 @@ Interface de gerenciamento tático e industrial em tempo real integrando mecâni
 </div>
 
 ---
+##📝Como caiu aqui?
+
+O projeto serve como uma estrutura mais bonita para um RPG tático com gerenciamento de recursos, farming, um toque de tower defense e 3D&T. Toda essa mistura precisava de algo mais visual que dispensasse o excesso de papel — e foi assim que a aplicação nasceu.
+
+---
 
 ## 📖 Visão Geral
 
