@@ -8,6 +8,8 @@ export default function AddInstallationModal({ setorId, onClose }) {
   
   // Específicos Fábrica
   const [isExtracao, setIsExtracao] = useState(false);
+  const [tipoFabrica, setTipoFabrica] = useState('BASE');
+  const [energiaRequerida, setEnergiaRequerida] = useState(500);
   
   // Específicos Armazenamento
   const [capacidade, setCapacidade] = useState(1000);
@@ -29,7 +31,9 @@ export default function AddInstallationModal({ setorId, onClose }) {
     if (tipo === 'fabrica') {
       payload.fabrica = { 
         nome, 
-        is_extracao: isExtracao 
+        is_extracao: isExtracao,
+        tipo_fabrica: tipoFabrica,
+        energia_requerida_kwh: energiaRequerida
       };
     } else if (tipo === 'armazenamento') {
       payload.armazenamento = { 
@@ -123,16 +127,45 @@ export default function AddInstallationModal({ setorId, onClose }) {
 
           {/* Campos Específicos: Fábrica */}
           {tipo === 'fabrica' && (
-            <div className="flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg mt-2 cursor-pointer" onClick={() => setIsExtracao(!isExtracao)}>
-              <input 
-                type="checkbox"
-                checked={isExtracao}
-                onChange={() => {}}
-                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-200">É um Extrator?</span>
-                <span className="text-xs text-slate-400">Marque se esta instalação coleta matéria-prima ao invés de manufaturar.</span>
+            <div className="space-y-4 mt-2">
+              <div className="flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg cursor-pointer" onClick={() => setIsExtracao(!isExtracao)}>
+                <input 
+                  type="checkbox"
+                  checked={isExtracao}
+                  onChange={() => {}}
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-200">É um Extrator?</span>
+                  <span className="text-xs text-slate-400">Marque se esta instalação coleta matéria-prima ao invés de processar.</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo da Fábrica</label>
+                  <select
+                    value={tipoFabrica}
+                    onChange={(e) => setTipoFabrica(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500 appearance-none"
+                  >
+                    <option value="BASE">Base</option>
+                    <option value="TECNOLOGIA">Tecnologia</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Consumo (kWh)</label>
+                  <input 
+                    required
+                    type="number"
+                    min="0"
+                    step="50"
+                    value={energiaRequerida}
+                    onChange={(e) => setEnergiaRequerida(Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500"
+                  />
+                </div>
               </div>
             </div>
           )}

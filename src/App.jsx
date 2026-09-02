@@ -444,6 +444,7 @@ function FlowMap({ playerId, onLogout }) {
           setSelectedBaseIndex(index);
           loadData(index);
         }}
+        nodes={nodes}
       />
       
       <DetailsPanel 
@@ -474,6 +475,7 @@ function FlowMap({ playerId, onLogout }) {
         fitView
         style={{ backgroundColor: '#8fa080' }}
         nodesDraggable={false}
+        connectionMode="loose"
       >
         <Controls className="!bg-white !border-slate-300 !fill-slate-700" />
       </ReactFlow>
@@ -598,7 +600,7 @@ export default function App() {
         <AnimatedCityBackground />
         <div className="bg-slate-900 border-[6px] border-slate-800 p-10 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] w-full max-w-md text-center relative z-10">
           <h1 className="text-3xl font-bold tracking-widest text-white mb-2 drop-shadow-md">Gerenciador de recurso</h1>
-          <h2 className="text-xl font-bold tracking-widest text-sky-400 mb-8 drop-shadow-md">V1.3</h2>
+          <h2 className="text-xl font-bold tracking-widest text-sky-400 mb-8 drop-shadow-md">V1.6</h2>
           
           <div className="text-left">
             <label className="block text-slate-400 text-sm font-bold mb-3 uppercase tracking-wider">

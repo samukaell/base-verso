@@ -172,9 +172,23 @@ export async function adicionarInstalacoesSetor({
   energia = null,
 }) {
   try {
+    // 1. Normaliza o payload da fábrica para o formato exato esperado pela procedure
+    let payloadFabrica = null;
+    if (fabrica) {
+      payloadFabrica = {
+        nome: fabrica.nome || fabrica.nome_fabrica || 'Nova Fábrica',
+        // Garante 'BASE' ou 'TECNOLOGIA' (o banco rejeita MANUFATURA)
+        tipo: (fabrica.tipo || fabrica.tipo_fabrica || 'BASE').toUpperCase(),
+        is_extracao: Boolean(fabrica.is_extracao),
+        velocidade: Number(fabrica.velocidade || fabrica.velocidade_processamento || 1.0),
+        energia_requerida: Number(fabrica.energia_requerida || fabrica.energia_requerida_kwh || 500.0),
+      };
+    }
+
+    // 2. Chamada da RPC no Supabase
     const { data, error } = await supabase.rpc('adicionar_instalacao_setor', {
       p_setor_id: setorId,
-      p_fabrica: fabrica,
+      p_fabrica: payloadFabrica,
       p_armazenamento: armazenamento,
       p_energia: energia,
     });

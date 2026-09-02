@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, Package, LogOut, Globe, FlaskConical, Boxes } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Activity, Package, LogOut, Globe, FlaskConical, Boxes, Battery, BatteryLow, BatteryMedium, BatteryFull, Info } from 'lucide-react';
 import TimeSkipWidget from './TimeSkipWidget';
 import InventoryModal from './InventoryModal';
 import CreateSectorModal from './CreateSectorModal';
 import CreateMaterialModal from './CreateMaterialModal';
 import CreateRecipeModal from './CreateRecipeModal';
+import clsx from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-export default function HUD({ dayCount = 1, baseId, onTimeSkipComplete, onLogout, playerId, playerBases = [], selectedBaseIndex = 0, onSelectBase }) {
+function cn(...inputs) {
+  return twMerge(clsx(inputs));
+}
+
+export default function HUD({ baseId, onTimeSkipComplete, onLogout, playerId, playerBases = [], selectedBaseIndex = 0, onSelectBase, nodes = [] }) {
   const [showInventory, setShowInventory] = useState(false);
   const [showCreateSector, setShowCreateSector] = useState(false);
   const [showCreateMaterial, setShowCreateMaterial] = useState(false);
   const [showCreateRecipe, setShowCreateRecipe] = useState(false);
+  const [showEnergyDetails, setShowEnergyDetails] = useState(false);
   
   const [mundoData, setMundoData] = useState(null);
 
@@ -30,7 +37,49 @@ export default function HUD({ dayCount = 1, baseId, onTimeSkipComplete, onLogout
 
   const formatName = (str) => {
     if (!str) return "";
-    return str.replace(/BASE(\s*-)?\s*/i, 'Base ').trim();
+    return str.replace(/BASE DE ARR(\s*-)?\s*/i, 'Base ').trim();
+  };
+
+  // Cálculo de Energia Global da Base
+  const { totalCapacity, totalRemaining, totalConsumed, consumers } = useMemo(() => {
+    let capacity = 0;
+    let consumed = 0;
+    const consList = [];
+
+    (nodes || []).forEach(n => {
+      if (n.data?.isEmpty) return;
+      
+      const prod = Number(n.data.producao_kwh_hora) || 0;
+      capacity += prod;
+      
+      if (n.data?.fabricas && Array.isArray(n.data.fabricas)) {
+        n.data.fabricas.forEach(fab => {
+          const req = Number(fab.energia_requerida_kwh || fab.energia_requerida || 0);
+          if (req > 0) {
+            consumed += req;
+            consList.push({
+              id: fab.id,
+              nome_fabrica: fab.nome_fabrica || fab.nome || 'Fábrica',
+              setor: n.data.nome || 'Setor',
+              req
+            });
+          }
+        });
+      }
+    });
+
+    const remaining = Math.max(0, capacity - consumed);
+    return { totalCapacity: capacity, totalRemaining: remaining, totalConsumed: consumed, consumers: consList };
+  }, [nodes]);
+
+  const pctRemaining = totalCapacity > 0 ? Math.max(0, Math.min(100, (totalRemaining / totalCapacity) * 100)) : 0;
+  
+  const getBatteryIcon = () => {
+    if (totalCapacity === 0) return null;
+    if (pctRemaining >= 75) return <BatteryFull className="w-8 h-8 text-emerald-400" />;
+    if (pctRemaining >= 25) return <BatteryMedium className="w-8 h-8 text-amber-400" />;
+    if (pctRemaining > 0) return <BatteryLow className="w-8 h-8 text-orange-500" />;
+    return <Battery className="w-8 h-8 text-red-500" />;
   };
 
   return (
@@ -138,6 +187,66 @@ export default function HUD({ dayCount = 1, baseId, onTimeSkipComplete, onLogout
             <div></div>
           )}
         </div>
+
+        {/* Bateria Global da Base (Ícones) */}
+        {totalCapacity > 0 && (
+          <div 
+            className="flex items-center mt-2 relative cursor-help w-fit"
+            onMouseEnter={() => setShowEnergyDetails(true)}
+            onMouseLeave={() => setShowEnergyDetails(false)}
+          >
+            <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700 p-2 rounded-xl shadow-lg flex items-center gap-3 pointer-events-auto hover:bg-slate-800/90 transition-all">
+              {getBatteryIcon()}
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Rede Elétrica</span>
+                <span className="text-white font-extrabold">{pctRemaining.toFixed(1)}%</span>
+              </div>
+            </div>
+
+            {/* Tooltip de Detalhes da Energia */}
+            <div 
+              className={cn(
+                "absolute top-0 left-full ml-4 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.8)] p-3 w-64 transition-all duration-300 origin-left z-50 pointer-events-none",
+                showEnergyDetails ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+              )}
+            >
+              <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-sky-400" />
+                Fornecimento de Energia
+              </h3>
+              
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                <div className="flex justify-between items-center text-[10px] bg-slate-800/50 p-1.5 rounded mb-2 border border-slate-700/50">
+                  <span className="text-slate-400">Total Produzido:</span>
+                  <span className="text-emerald-400 font-bold">{totalCapacity.toFixed(0)} kWh</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] bg-slate-800/50 p-1.5 rounded mb-2 border border-slate-700/50">
+                  <span className="text-slate-400">Total Consumido:</span>
+                  <span className="text-amber-400 font-bold">{totalConsumed.toFixed(0)} kWh</span>
+                </div>
+
+                <div className="text-xs text-slate-500 font-bold uppercase mt-3 mb-2 border-b border-slate-800 pb-1">Instalações Consumidoras</div>
+                
+                {consumers.length === 0 ? (
+                  <div className="text-slate-500 text-[10px] italic text-center py-2">Nenhuma fábrica consumindo energia</div>
+                ) : (
+                  consumers.map(cons => (
+                    <div key={cons.id} className="flex flex-col gap-1 text-[10px] pb-2 border-b border-slate-800 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center font-bold text-slate-200">
+                        <span className="truncate max-w-[140px] text-sky-400">{cons.nome_fabrica}</span>
+                        <span className="text-amber-400">{cons.req} kWh</span>
+                      </div>
+                      <div className="text-slate-500 flex items-center gap-1">
+                        <span>Local:</span>
+                        <span className="text-slate-400 truncate">{cons.setor}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {showInventory && (
