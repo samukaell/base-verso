@@ -15,6 +15,7 @@ import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 import CreateRoadModal from './components/CreateRoadModal';
 import CreateSectorModal from './components/CreateSectorModal';
+import CursorTracker from './components/CursorTracker';
 import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase } from './request/request';
 
 function FlowMap({ playerId, onLogout }) {
@@ -24,6 +25,8 @@ function FlowMap({ playerId, onLogout }) {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [baseId, setBaseId] = useState(null);
+  const [playerBases, setPlayerBases] = useState([]);
+  const [selectedBaseIndex, setSelectedBaseIndex] = useState(0);
   const [pendingConnection, setPendingConnection] = useState(null);
   const [pendingNewSector, setPendingNewSector] = useState(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
@@ -84,7 +87,7 @@ function FlowMap({ playerId, onLogout }) {
     });
   }, [setNodes]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (forceIndex) => {
     if (!playerId) return;
     setIsLoading(true);
     try {
@@ -93,24 +96,33 @@ function FlowMap({ playerId, onLogout }) {
       const responseObj = Array.isArray(data) ? data[0] : data;
 
       if (responseObj && responseObj.bases && responseObj.bases.length > 0) {
-        const primeiraBase = responseObj.bases[0];
-        setBaseId(primeiraBase.id); // store baseId
+        setPlayerBases(responseObj.bases);
+        
+        const indexToUse = forceIndex !== undefined ? forceIndex : selectedBaseIndex;
+        const safeIndex = indexToUse < responseObj.bases.length ? indexToUse : 0;
+        
+        if (safeIndex !== selectedBaseIndex) {
+          setSelectedBaseIndex(safeIndex);
+        }
+        
+        const baseToLoad = responseObj.bases[safeIndex];
+        setBaseId(baseToLoad.id); // store baseId
 
         let globalProcessos = [];
         try {
-          const procRes = await listarTodosProcessosBase(primeiraBase.id);
+          const procRes = await listarTodosProcessosBase(baseToLoad.id);
           if (procRes && procRes.processos) {
             globalProcessos = procRes.processos;
           }
         } catch(e) { console.error("Erro ao carregar processos:", e); }
 
-        const setores = primeiraBase.setores || [];
-        const estradas = primeiraBase.estradas || [];
+        const setores = baseToLoad.setores || [];
+        const estradas = baseToLoad.estradas || [];
         
         const playerInfo = {
           id: responseObj.id,
           nome: responseObj.nome,
-          baseId: primeiraBase.id
+          baseId: baseToLoad.id
         };
         
         const oldLayoutMap = [
@@ -318,7 +330,7 @@ function FlowMap({ playerId, onLogout }) {
     } finally {
       setIsLoading(false);
     }
-  }, [handleToggleTrouble, setNodes, setEdges]);
+  }, [handleToggleTrouble, setNodes, setEdges, playerId, selectedBaseIndex]);
 
   // Initialize nodes and edges from Supabase RPC
   useEffect(() => {
@@ -420,7 +432,19 @@ function FlowMap({ playerId, onLogout }) {
 
   return (
     <div className="w-screen h-screen relative">
-      <HUD dayCount={dayCount} baseId={baseId} onTimeSkipComplete={onTimeSkipComplete} onLogout={onLogout} playerId={playerId} />
+      <HUD 
+        dayCount={dayCount} 
+        baseId={baseId} 
+        onTimeSkipComplete={onTimeSkipComplete} 
+        onLogout={onLogout} 
+        playerId={playerId} 
+        playerBases={playerBases}
+        selectedBaseIndex={selectedBaseIndex}
+        onSelectBase={(index) => {
+          setSelectedBaseIndex(index);
+          loadData(index);
+        }}
+      />
       
       <DetailsPanel 
         baseId={baseId}
@@ -431,6 +455,8 @@ function FlowMap({ playerId, onLogout }) {
         nodes={nodes}
         edges={edges}
       />
+
+      <CursorTracker />
 
       <ReactFlow
         nodes={nodes}
