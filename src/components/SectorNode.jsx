@@ -84,8 +84,15 @@ export default function SectorNode({ data, selected }) {
             hasTrouble && "brightness-50"
           )}
         >
-          {/* Input Handle */}
-        <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
+        {/* Input Handle */}
+        <Handle type="target" position={Position.Top} className="!w-6 !h-6 !bg-transparent !border-none cursor-crosshair z-50 flex items-center justify-center group/handle">
+          <div className="w-4 h-4 bg-white/40 border-2 border-white/40 rotate-45 flex items-center justify-center transition-all duration-200 group-hover/handle:bg-[#ff194b] group-hover/handle:border-white group-hover/handle:scale-125 shadow-sm">
+            <div className="-rotate-45 flex items-center justify-center w-full h-full relative">
+              <div className="w-2 h-0.5 bg-white/80 group-hover/handle:bg-white absolute"></div>
+              <div className="w-0.5 h-2 bg-white/80 group-hover/handle:bg-white absolute"></div>
+            </div>
+          </div>
+        </Handle>
         
         {/* Header */}
         <div className={cn(
@@ -128,9 +135,30 @@ export default function SectorNode({ data, selected }) {
         </div>
 
         {/* Output Handles */}
-        <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
-        <Handle id="right" type="source" position={Position.Right} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
-        <Handle id="left" type="source" position={Position.Left} className="!w-3 !h-3 !bg-[#ff194b] !border-black cursor-crosshair z-50 rounded-none opacity-0 hover:opacity-100" />
+        <Handle type="source" position={Position.Bottom} className="!w-6 !h-6 !bg-transparent !border-none cursor-crosshair z-50 flex items-center justify-center group/handle">
+          <div className="w-4 h-4 bg-white/40 border-2 border-white/40 rotate-45 flex items-center justify-center transition-all duration-200 group-hover/handle:bg-[#ff194b] group-hover/handle:border-white group-hover/handle:scale-125 shadow-sm">
+            <div className="-rotate-45 flex items-center justify-center w-full h-full relative">
+              <div className="w-2 h-0.5 bg-white/80 group-hover/handle:bg-white absolute"></div>
+              <div className="w-0.5 h-2 bg-white/80 group-hover/handle:bg-white absolute"></div>
+            </div>
+          </div>
+        </Handle>
+        <Handle id="right" type="source" position={Position.Right} className="!w-6 !h-6 !bg-transparent !border-none cursor-crosshair z-50 flex items-center justify-center group/handle">
+          <div className="w-4 h-4 bg-white/40 border-2 border-white/40 rotate-45 flex items-center justify-center transition-all duration-200 group-hover/handle:bg-[#ff194b] group-hover/handle:border-white group-hover/handle:scale-125 shadow-sm">
+            <div className="-rotate-45 flex items-center justify-center w-full h-full relative">
+              <div className="w-2 h-0.5 bg-white/80 group-hover/handle:bg-white absolute"></div>
+              <div className="w-0.5 h-2 bg-white/80 group-hover/handle:bg-white absolute"></div>
+            </div>
+          </div>
+        </Handle>
+        <Handle id="left" type="source" position={Position.Left} className="!w-6 !h-6 !bg-transparent !border-none cursor-crosshair z-50 flex items-center justify-center group/handle">
+          <div className="w-4 h-4 bg-white/40 border-2 border-white/40 rotate-45 flex items-center justify-center transition-all duration-200 group-hover/handle:bg-[#ff194b] group-hover/handle:border-white group-hover/handle:scale-125 shadow-sm">
+            <div className="-rotate-45 flex items-center justify-center w-full h-full relative">
+              <div className="w-2 h-0.5 bg-white/80 group-hover/handle:bg-white absolute"></div>
+              <div className="w-0.5 h-2 bg-white/80 group-hover/handle:bg-white absolute"></div>
+            </div>
+          </div>
+        </Handle>
       </div>
       </div>
     </div>
