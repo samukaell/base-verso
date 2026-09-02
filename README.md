@@ -24,6 +24,7 @@ O sistema provê uma interface para supervisão e controle de operações planet
 
 ---
 
+
 ## 🛠️ Tecnologias Utilizadas
 
 | Tecnologia | Descrição |
