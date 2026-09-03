@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { ShieldAlert, Zap, Factory, Database, Shield } from 'lucide-react';
+import { ShieldAlert, Zap, Factory, Database, Shield, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

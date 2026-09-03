@@ -16,6 +16,7 @@ import HUD from './components/HUD';
 import DetailsPanel from './components/DetailsPanel';
 import CreateRoadModal from './components/CreateRoadModal';
 import CreateSectorModal from './components/CreateSectorModal';
+import CreateFichaModal from './components/CreateFichaModal';
 import CursorTracker from './components/CursorTracker';
 import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase, atualizarStatusFicha } from './request/request';
 
@@ -35,6 +36,7 @@ function FlowMap({ playerId, onLogout }) {
   const [selectedBaseIndex, setSelectedBaseIndex] = useState(0);
   const [pendingConnection, setPendingConnection] = useState(null);
   const [pendingNewSector, setPendingNewSector] = useState(null);
+  const [pendingNewFicha, setPendingNewFicha] = useState(null);
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
 
@@ -318,7 +320,8 @@ function FlowMap({ playerId, onLogout }) {
                   isEmpty: true,
                   layoutX: layout.x,
                   layoutY: layout.y,
-                  onCreateClick: () => setPendingNewSector({ x: layout.x, y: layout.y })
+                  onCreateClick: () => setPendingNewSector({ x: layout.x, y: layout.y }),
+                    onCreateFichaClick: () => setPendingNewFicha({ x: layout.x, y: layout.y })
                 }
               });
             }
@@ -342,7 +345,8 @@ function FlowMap({ playerId, onLogout }) {
                       isEmpty: true,
                       layoutX: fl.x,
                       layoutY: fl.y,
-                      onCreateClick: () => setPendingNewSector({ x: fl.x, y: fl.y })
+                      onCreateClick: () => setPendingNewSector({ x: fl.x, y: fl.y }),
+                        onCreateFichaClick: () => setPendingNewFicha({ x: fl.x, y: fl.y })
                     }
                 });
             }
