@@ -463,6 +463,14 @@ function FlowMap({ playerId, onLogout }) {
       <div className="w-screen h-screen flex flex-col items-center justify-center bg-slate-950 text-sky-400">
         <div className="w-12 h-12 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mb-4"></div>
         <h2 className="text-xl font-bold font-mono tracking-widest">Sincronizando com Supabase...</h2>
+        {pendingNewFicha && (
+          <CreateFichaModal 
+            baseId={baseId}
+            defaultX={pendingNewFicha.x}
+            defaultY={pendingNewFicha.y}
+            onClose={() => setPendingNewFicha(null)}
+          />
+        )}
       </div>
     );
   }
