@@ -24,11 +24,26 @@ export default function SectorNode({ data, selected }) {
   if (data.isEmpty) {
     return (
       <div 
-        style={{ width: data.width || 200, height: data.height || 150, backgroundColor: '#708066' }}
-        className="border-[6px] border-black transition-colors flex items-center justify-center cursor-pointer shadow-sm group hover:brightness-110"
-        onClick={() => data.onCreateClick && data.onCreateClick()}
+        style={{ width: data.width || 250, height: data.height || 150, backgroundColor: '#708066' }}
+        className="border-[6px] border-black flex items-center justify-center gap-10 shadow-sm"
       >
-        <span className="text-white font-bold text-5xl opacity-50 group-hover:opacity-100">+</span>
+        {/* Add Sector Button */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); data.onCreateClick && data.onCreateClick(); }}
+          className="text-white font-bold text-5xl opacity-50 hover:opacity-100 hover:scale-110 transition-all cursor-pointer"
+          title="Criar Setor"
+        >
+          +
+        </button>
+
+        {/* Add Ficha Button */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); data.onCreateFichaClick && data.onCreateFichaClick(); }}
+          className="text-white opacity-50 hover:opacity-100 hover:scale-110 transition-all cursor-pointer"
+          title="Criar Ficha"
+        >
+          <FileText size={40} />
+        </button>
       </div>
     );
   }
