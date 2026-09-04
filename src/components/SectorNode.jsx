@@ -20,6 +20,10 @@ export default function SectorNode({ data, selected }) {
   } = data;
 
   const hasTrouble = status !== 'OPERANDO';
+  
+  // Base 15px + 1px por nível de defesa (escala mínima)
+  const height3D = 15 + (Number(nivel_defesa) || 0) * 1;
+  const roofTranslate = -height3D;
 
   if (data.isEmpty) {
     return (
@@ -35,15 +39,6 @@ export default function SectorNode({ data, selected }) {
         >
           +
         </button>
-
-        {/* Add Ficha Button */}
-        <button 
-          onClick={(e) => { e.stopPropagation(); data.onCreateFichaClick && data.onCreateFichaClick(); }}
-          className="text-white opacity-50 hover:opacity-100 hover:scale-110 transition-all cursor-pointer"
-          title="Criar Ficha"
-        >
-          <FileText size={40} />
-        </button>
       </div>
     );
   }
@@ -53,10 +48,10 @@ export default function SectorNode({ data, selected }) {
       style={{ width: data.width || 200, height: data.height || 150 }}
       className="relative group"
     >
-      {/* Wrapper that translates the building down to the ground */}
+      {/* Wrapper that translates the building UP so the base stays at 0,0 */}
       <div 
         className="absolute inset-0 transition-transform duration-700 ease-in-out"
-        style={{ transform: hasTrouble ? 'translate(25px, 25px)' : 'translate(0px, 0px)' }}
+        style={{ transform: hasTrouble ? 'translate(0px, 0px)' : `translate(${roofTranslate}px, ${roofTranslate}px)` }}
       >
         {/* Right Face (3D depth) */}
         <div 
@@ -67,7 +62,7 @@ export default function SectorNode({ data, selected }) {
           style={{ 
             top: 0, 
             left: '100%', 
-            width: hasTrouble ? '0px' : '25px', 
+            width: hasTrouble ? '0px' : `${height3D}px`, 
             height: '100%', 
             transform: 'skewY(45deg)', 
             zIndex: 0 
@@ -84,7 +79,7 @@ export default function SectorNode({ data, selected }) {
             top: '100%', 
             left: 0, 
             width: '100%', 
-            height: hasTrouble ? '0px' : '25px', 
+            height: hasTrouble ? '0px' : `${height3D}px`, 
             transform: 'skewX(45deg)', 
             zIndex: 0 
           }} 

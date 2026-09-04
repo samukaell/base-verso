@@ -157,14 +157,14 @@ const CustomSmartEdge = (props) => {
       const isEmpty = n.data?.isEmpty;
       const isFicha = n.type === 'ficha';
       
-      let expand = 27;
-      let offset = 2;
+      let expand = 2; // Apenas padding
+      let offset = 1;
       
       if (isEmpty) {
         expand = 0;
         offset = 0;
       } else if (isFicha) {
-        expand = 10; // 5px de margem em cada lado para não encostar na Ficha
+        expand = 10;
         offset = 5;
       }
 
@@ -179,7 +179,24 @@ const CustomSmartEdge = (props) => {
       };
     });
 
-  const getSmartEdgeResponse = createGridPath(sourceX, sourceY, targetX, targetY, pathfindingNodes);
+  const sourceNode = nodes.find(n => n.id === source);
+  const targetNode = nodes.find(n => n.id === target);
+  
+  const sourceIsSector = sourceNode && sourceNode.type !== 'ficha' && !sourceNode.data?.isEmpty;
+  const targetIsSector = targetNode && targetNode.type !== 'ficha' && !targetNode.data?.isEmpty;
+
+  const getBuildingHeight = (node) => {
+    return 15 + (Number(node?.data?.nivel_defesa) || 0) * 1;
+  };
+
+  // A linha deve começar na Base do prédio, não no telhado! 
+  // Por isso somamos o offset dinâmico baseado na altura real daquele prédio.
+  const sx = sourceX + (sourceIsSector ? getBuildingHeight(sourceNode) : 0);
+  const sy = sourceY + (sourceIsSector ? getBuildingHeight(sourceNode) : 0);
+  const tx = targetX + (targetIsSector ? getBuildingHeight(targetNode) : 0);
+  const ty = targetY + (targetIsSector ? getBuildingHeight(targetNode) : 0);
+
+  const getSmartEdgeResponse = createGridPath(sx, sy, tx, ty, pathfindingNodes);
   
   let path, labelX, labelY;
   if (getSmartEdgeResponse) {
