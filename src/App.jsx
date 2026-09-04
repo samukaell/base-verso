@@ -6,9 +6,14 @@ import {
   useEdgesState,
   addEdge,
   Background,
-  Controls
+  Controls,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  useNodes
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { getSmartEdge } from '@tisoap/react-flow-smart-edge';
 
 import SectorNode from './components/SectorNode';
 import FichaNode from './components/FichaNode';
@@ -23,6 +28,205 @@ import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase, atualizar
 const nodeTypes = {
   sector: SectorNode,
   ficha: FichaNode
+};
+
+function createGridPath(sourceX, sourceY, targetX, targetY, nodes) {
+  const GRID = 10;
+  
+  let minX = Math.min(sourceX, targetX) - 50;
+  let maxX = Math.max(sourceX, targetX) + 50;
+  let minY = Math.min(sourceY, targetY) - 50;
+  let maxY = Math.max(sourceY, targetY) + 50;
+  
+  nodes.forEach(n => {
+    if (n.position.x < minX) minX = n.position.x;
+    if (n.position.x + n.width > maxX) maxX = n.position.x + n.width;
+    if (n.position.y < minY) minY = n.position.y;
+    if (n.position.y + n.height > maxY) maxY = n.position.y + n.height;
+  });
+
+  minX = Math.floor(minX / GRID) * GRID;
+  minY = Math.floor(minY / GRID) * GRID;
+  maxX = Math.ceil(maxX / GRID) * GRID;
+  maxY = Math.ceil(maxY / GRID) * GRID;
+  
+  const cols = Math.max(1, (maxX - minX) / GRID + 1);
+  const rows = Math.max(1, (maxY - minY) / GRID + 1);
+  
+  const grid = new Uint8Array(cols * rows);
+  
+  nodes.forEach(n => {
+    const l = Math.floor((n.position.x - minX) / GRID);
+    const r = Math.ceil((n.position.x + n.width - minX) / GRID);
+    const t = Math.floor((n.position.y - minY) / GRID);
+    const b = Math.ceil((n.position.y + n.height - minY) / GRID);
+    for (let x = l; x <= r; x++) {
+      for (let y = t; y <= b; y++) {
+        if (x >= 0 && x < cols && y >= 0 && y < rows) {
+          grid[y * cols + x] = 1;
+        }
+      }
+    }
+  });
+  
+  const sX = Math.max(0, Math.min(cols - 1, Math.round((sourceX - minX) / GRID)));
+  const sY = Math.max(0, Math.min(rows - 1, Math.round((sourceY - minY) / GRID)));
+  const eX = Math.max(0, Math.min(cols - 1, Math.round((targetX - minX) / GRID)));
+  const eY = Math.max(0, Math.min(rows - 1, Math.round((targetY - minY) / GRID)));
+  
+  // Liberar saída e chegada
+  grid[sY * cols + sX] = 0;
+  grid[eY * cols + eX] = 0;
+  
+  const queue = new Uint32Array(cols * rows * 2);
+  const parent = new Int32Array(cols * rows).fill(-1);
+  const visited = new Uint8Array(cols * rows);
+  
+  let head = 0;
+  let tail = 0;
+  
+  queue[tail++] = sX;
+  queue[tail++] = sY;
+  visited[sY * cols + sX] = 1;
+  
+  const dirs = [0, -1, 1, 0, 0, 1, -1, 0];
+  let found = false;
+  
+  while(head < tail) {
+    const cx = queue[head++];
+    const cy = queue[head++];
+    const cidx = cy * cols + cx;
+    
+    if (cx === eX && cy === eY) {
+      found = true;
+      break;
+    }
+    
+    for (let i = 0; i < 8; i += 2) {
+      const nx = cx + dirs[i];
+      const ny = cy + dirs[i+1];
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+        const nidx = ny * cols + nx;
+        if (grid[nidx] === 0 && visited[nidx] === 0) {
+          visited[nidx] = 1;
+          parent[nidx] = cidx;
+          queue[tail++] = nx;
+          queue[tail++] = ny;
+        }
+      }
+    }
+  }
+  
+  if (!found) return null;
+  
+  const path = [];
+  let curr = eY * cols + eX;
+  while(curr !== -1) {
+    const py = Math.floor(curr / cols);
+    const px = curr % cols;
+    path.push({ x: px * GRID + minX, y: py * GRID + minY });
+    curr = parent[curr];
+  }
+  path.reverse();
+  
+  let svg = `M ${sourceX} ${sourceY}`;
+  for (let i = 1; i < path.length; i++) {
+    svg += ` L ${path[i].x} ${path[i].y}`;
+  }
+  svg += ` L ${targetX} ${targetY}`;
+  
+  return { 
+    svgPathString: svg, 
+    edgeCenterX: path[Math.floor(path.length/2)].x, 
+    edgeCenterY: path[Math.floor(path.length/2)].y 
+  };
+}
+
+const CustomSmartEdge = (props) => {
+  const { 
+    id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, 
+    style, markerEnd, label, labelStyle, labelBgStyle
+  } = props;
+  const nodes = useNodes();
+  
+  const pathfindingNodes = nodes
+    .filter(n => n.id !== source && n.id !== target)
+    .map(n => {
+      const w = n.measured?.width || n.width || n.data?.width || 250;
+      const h = n.measured?.height || n.height || n.data?.height || 150;
+      const isEmpty = n.data?.isEmpty;
+      const isFicha = n.type === 'ficha';
+      
+      let expand = 27;
+      let offset = 2;
+      
+      if (isEmpty) {
+        expand = 0;
+        offset = 0;
+      } else if (isFicha) {
+        expand = 10; // 5px de margem em cada lado para não encostar na Ficha
+        offset = 5;
+      }
+
+      return {
+        ...n,
+        position: {
+          x: n.position.x - offset, 
+          y: n.position.y - offset
+        },
+        width: w + expand,
+        height: h + expand
+      };
+    });
+
+  const getSmartEdgeResponse = createGridPath(sourceX, sourceY, targetX, targetY, pathfindingNodes);
+  
+  let path, labelX, labelY;
+  if (getSmartEdgeResponse) {
+    path = getSmartEdgeResponse.svgPathString;
+    labelX = getSmartEdgeResponse.edgeCenterX;
+    labelY = getSmartEdgeResponse.edgeCenterY;
+  } else {
+    const [smoothPath, sx, sy] = getSmoothStepPath({
+      sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition
+    });
+    path = smoothPath;
+    labelX = sx;
+    labelY = sy;
+  }
+
+  return (
+    <>
+      <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+              backgroundColor: labelBgStyle?.fill || 'white',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: `2px solid ${labelBgStyle?.stroke || '#1e293b'}`,
+              color: labelStyle?.fill || '#0f172a',
+              fontWeight: 'bold',
+              fontSize: 14,
+              fontFamily: 'sans-serif',
+              zIndex: 999999
+            }}
+            className="nodrag nopan"
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+};
+
+const edgeTypes = {
+  smart: CustomSmartEdge
 };
 
 function FlowMap({ playerId, onLogout }) {
@@ -278,6 +482,9 @@ function FlowMap({ playerId, onLogout }) {
               id: nodeData.id,
               type: nodeData._nodeType,
               position: { x: layout.x, y: layout.y },
+              width: layout.width,
+              height: layout.height,
+              measured: { width: layout.width, height: layout.height },
               zIndex: 1000 + Math.round(layout.x + layout.y),
               data: {
                 ...nodeData,
@@ -313,6 +520,9 @@ function FlowMap({ playerId, onLogout }) {
                 id: `empty_${index}`,
                 type: 'sector',
                 position: { x: layout.x, y: layout.y },
+                width: layout.width,
+                height: layout.height,
+                measured: { width: layout.width, height: layout.height },
                 zIndex: 0, // Ensure empty spots stay at the back
                 data: {
                   width: layout.width,
@@ -338,6 +548,9 @@ function FlowMap({ playerId, onLogout }) {
                     id: `empty_${fallbackIndex}`,
                     type: 'sector',
                     position: { x: fl.x, y: fl.y },
+                    width: fl.width,
+                    height: fl.height,
+                    measured: { width: fl.width, height: fl.height },
                     zIndex: 0,
                     data: {
                       width: fl.width,
@@ -402,12 +615,18 @@ function FlowMap({ playerId, onLogout }) {
     async (edgesToDelete) => {
       const { deletarEstrada } = await import('./services/deleteService');
       
+      const processedIds = new Set();
+      
       for (const edge of edgesToDelete) {
-        const res = await deletarEstrada(edge.id);
+        const actualId = edge.id.replace('-outline', '');
+        if (processedIds.has(actualId)) continue;
+        processedIds.add(actualId);
+
+        const res = await deletarEstrada(actualId);
         if (res && res.success) {
-          console.log('Estrada desconectada:', edge.id);
+          console.log('Estrada desconectada:', actualId);
         } else {
-          console.error('Falha ao desconectar estrada', edge.id);
+          console.error('Falha ao desconectar estrada', actualId);
         }
       }
     },
@@ -431,28 +650,47 @@ function FlowMap({ playerId, onLogout }) {
   );
 
   const currentEdges = useMemo(() => {
-    return edges.map(edge => {
+    return edges.flatMap(edge => {
       const sourceNode = nodes.find(n => n.id === edge.source);
       const isTrouble = sourceNode?.data?.status !== 'OPERANDO';
       const isHovered = edge.id === hoveredEdgeId;
       
-      return {
+      const baseEdge = {
         ...edge,
-        type: 'smoothstep', // Use orthogonal routing to look like streets
+        type: 'smart',
         animated: !isTrouble,
-        label: isHovered ? edge.label : undefined,
-        zIndex: isHovered ? 99999 : 0, // Boost zIndex massively to stay above the 3D depth of nodes
+      };
+
+      const outline = {
+        ...baseEdge,
+        id: `${edge.id}-outline`,
+        zIndex: isHovered ? 99998 : 0,
         style: {
           ...edge.style,
-          stroke: isTrouble ? '#7f1d1d' : '#1e293b', // darker streets
-          strokeWidth: isHovered ? (isTrouble ? 6 : 5) : (isTrouble ? 4 : 3), // Make edge thicker when hovered
-          cursor: 'pointer' // Add pointer cursor
+          stroke: isTrouble ? '#991b1b' : '#94a3b8', // Borda mais escura (vermelho escuro se em problema, senão cinza)
+          strokeWidth: isHovered ? 14 : 10,
+          cursor: 'pointer'
+        }
+      };
+
+      const inline = {
+        ...baseEdge,
+        id: edge.id, // Mantém o ID original para os eventos
+        label: isHovered ? edge.label : undefined,
+        zIndex: isHovered ? 99999 : 1,
+        style: {
+          ...edge.style,
+          stroke: isTrouble ? '#ef4444' : '#ffffff', // Interior branco parecendo rua de mapa (ou vermelho se problema)
+          strokeWidth: isHovered ? 8 : 6,
+          cursor: 'pointer'
         },
         labelBgPadding: [12, 6],
         labelBgBorderRadius: 6,
         labelBgStyle: { fill: '#ffffff', fillOpacity: 1, stroke: '#1e293b', strokeWidth: 2 },
         labelStyle: { fill: '#0f172a', fontWeight: 'bold', fontSize: 14, fontFamily: 'sans-serif' },
       };
+
+      return [outline, inline];
     });
   }, [edges, nodes, hoveredEdgeId]);
 
@@ -511,6 +749,7 @@ function FlowMap({ playerId, onLogout }) {
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         style={{ backgroundColor: '#8fa080' }}
         nodesDraggable={false}
