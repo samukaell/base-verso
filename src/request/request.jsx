@@ -592,3 +592,14 @@ export async function criarNovaFicha({
     return { success: false, message: err.message };
   }
 }
+
+export async function listarFichasBase(baseId) {
+  try {
+    const { data, error } = await supabase.from('fichas').select('*').eq('base_id', baseId);
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Erro ao listar fichas:', err.message);
+    return [];
+  }
+}

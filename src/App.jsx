@@ -18,7 +18,7 @@ import CreateRoadModal from './components/CreateRoadModal';
 import CreateSectorModal from './components/CreateSectorModal';
 import CreateFichaModal from './components/CreateFichaModal';
 import CursorTracker from './components/CursorTracker';
-import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase, atualizarStatusFicha } from './request/request';
+import { fetchPlayerData, updateSetorStatus, listarTodosProcessosBase, atualizarStatusFicha, listarFichasBase } from './request/request';
 
 const nodeTypes = {
   sector: SectorNode,
